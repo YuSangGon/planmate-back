@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  traveller
+  planner
+}
+
+enum RequestStatus {
+  open
+  matched
+  in_progress
+  delivered
+  completed
+  cancelled
+}
+
+enum PlanVisibility {
+  public
+  private
+}
+
+enum MatchProposalStatus {
+  pending
+  accepted
+  rejected
+  withdrawn
+}
+
+enum DirectProposalStatus {
+  pending
+  accepted
+  rejected
+  cancelled
+}
+
+enum PlanStatus {
+  draft
+  submitted
+  approved
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          UserRole
+  bio           String?
+  specialty     String?
+  rating        Float?    @default(0)
+  reviewCount   Int       @default(0)
+  location      String?
+  responseRate  String?
+  strengths     String[]
+  coinBalance   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  travellerRequests Request[]       @relation("TravellerRequests")
+  plannerRequests   Request[]       @relation("PlannerRequests")
+  plannerPlans      Plan[]          @relation("PlannerPlans")
+  travellerPlans    Plan[]          @relation("TravellerPlans")
+  proposals         MatchProposal[] @relation("PlannerProposals")
+
+  reviewsReceived   PlannerReview[] @relation("PlannerReviewsReceived")
+  reviewsWritten    PlannerReview[] @relation("PlannerReviewsWritten")
+
+  directProposalsReceived DirectProposal[] @relation("DirectProposalsReceived")
+  directProposalsSent     DirectProposal[] @relation("DirectProposalsSent")
+}
+
+model PlannerReview {
+  id          String   @id @default(cuid())
+  plannerId   String
+  travellerId String
+  rating      Int
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  planner   User @relation("PlannerReviewsReceived", fields: [plannerId], references: [id], onDelete: Cascade)
+  traveller User @relation("PlannerReviewsWritten", fields: [travellerId], references: [id], onDelete: Cascade)
+
+  @@index([plannerId])
+  @@index([travellerId])
+}
+
+model DirectProposal {
+  id           String               @id @default(cuid())
+  plannerId    String
+  travellerId  String
+
+  title        String
+  destination  String
+  duration     String
+  budget       String
+  travelStyle  String
+  interests    String[]
+  extraNotes   String?
+
+  status       DirectProposalStatus @default(pending)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  planner   User @relation("DirectProposalsReceived", fields: [plannerId], references: [id], onDelete: Cascade)
+  traveller User @relation("DirectProposalsSent", fields: [travellerId], references: [id], onDelete: Cascade)
+
+  @@index([plannerId])
+  @@index([travellerId])
+}
+
+model Request {
+  id               String        @id @default(cuid())
+  travellerId      String
+  plannerId        String?
+  destination      String
+  startDate        DateTime?
+  endDate          DateTime?
+  duration         String
+  budget           String
+  offerCost        Int           @default(0)
+  travelStyle      String
+  interests        String[]
+  extraNotes       String?
+  status           RequestStatus @default(open)
+  coinTransferred  Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  traveller User  @relation("TravellerRequests", fields: [travellerId], references: [id], onDelete: Cascade)
+  planner   User? @relation("PlannerRequests", fields: [plannerId], references: [id], onDelete: SetNull)
+
+  plans     Plan[]
+  proposals MatchProposal[]
+
+  @@index([travellerId])
+  @@index([plannerId])
+  @@index([status])
+}
+
+model Plan {
+  id          String         @id @default(cuid())
+  requestId   String?
+  plannerId   String
+  travellerId String?
+  title       String
+  destination String
+  summary     String
+  price       Int
+  duration    String
+  visibility  PlanVisibility @default(private)
+  status      PlanStatus     @default(draft)
+  content     Json?
+  tags        String[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  planner   User     @relation("PlannerPlans", fields: [plannerId], references: [id], onDelete: Cascade)
+  traveller User?    @relation("TravellerPlans", fields: [travellerId], references: [id], onDelete: SetNull)
+
+  @@index([plannerId])
+  @@index([travellerId])
+  @@index([visibility])
+  @@index([status])
+}
+
+model MatchProposal {
+  id            String              @id @default(cuid())
+  requestId      String
+  plannerId      String
+  message        String
+  proposedPrice  Int?
+  estimatedDays  Int?
+  status         MatchProposalStatus @default(pending)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  planner User    @relation("PlannerProposals", fields: [plannerId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, plannerId])
+  @@index([requestId])
+  @@index([plannerId])
+  @@index([status])
+}
