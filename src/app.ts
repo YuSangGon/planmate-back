@@ -5,6 +5,7 @@ import { env } from "./config/env";
 import { notFoundHandler } from "./middlewares/notFound.middleware";
 import { errorHandler } from "./middlewares/error.middleware";
 import { prisma } from "./lib/prisma";
+import { initSocketServer } from "./lib/socket";
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use(errorHandler);
 const server = app.listen(env.port, () => {
   console.log(`Server is running on port ${env.port}`);
 });
+
+initSocketServer(server);
 
 async function shutdown() {
   await prisma.$disconnect();

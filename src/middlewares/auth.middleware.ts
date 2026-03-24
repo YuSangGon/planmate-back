@@ -1,7 +1,21 @@
 import type { NextFunction, Request, Response } from "express";
 import { verifyAccessToken } from "../services/token.service";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+type AuthRequest = Request & {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+};
+
+export function requireAuth(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) {
   const authorization = req.headers.authorization;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -17,6 +31,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const payload = verifyAccessToken(token);
     req.auth = payload;
+    const decoded = jwt.verify(token, env.jwtAccessSecret) as {
+      id: string;
+      email: string;
+      role: string;
+    };
+
+    req.user = decoded;
     next();
   } catch {
     res.status(401).json({

@@ -163,7 +163,7 @@ export async function submitWorkPlan(input: {
     throw new Error("Only draft plans can be submitted");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const updatedPlan = await tx.plan.update({
       where: { id: plan.id },
       data: {
@@ -249,7 +249,7 @@ export async function approveSubmittedPlan(input: {
     throw new Error("Coins were already transferred for this request");
   }
 
-  if (requestItem.status !== "submitted") {
+  if ((requestItem.status as string) !== "submitted") {
     throw new Error("This request is not waiting for approval");
   }
 
@@ -265,7 +265,7 @@ export async function approveSubmittedPlan(input: {
     throw new Error("Submitted plan not found");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const updatedPlan = await tx.plan.update({
       where: { id: plan.id },
       data: {

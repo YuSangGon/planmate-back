@@ -20,7 +20,7 @@ export async function getPlannerList(_req: Request, res: Response) {
 
 export async function getPlannerDetail(req: Request, res: Response) {
   try {
-    const planner = await getPlannerById(req.params.plannerId);
+    const planner = await getPlannerById(req.params.plannerId as string);
 
     if (!planner) {
       res.status(404).json({

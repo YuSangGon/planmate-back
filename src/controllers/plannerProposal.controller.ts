@@ -52,7 +52,10 @@ export async function getPlannerSentProposalDetailController(
   }
 
   try {
-    const data = await getSentProposalDetail(req.params.proposalId, plannerId);
+    const data = await getSentProposalDetail(
+      req.params.proposalId as string,
+      plannerId,
+    );
     res.json({ success: true, data });
   } catch (error) {
     const message =
@@ -108,7 +111,7 @@ export async function deletePlannerSentProposalController(
 
   try {
     const data = await deleteSentProposal({
-      proposalId: req.params.proposalId,
+      proposalId: req.params.proposalId as string,
       plannerId,
     });
 
@@ -137,7 +140,7 @@ export async function withdrawPlannerSentProposalController(
 
   try {
     const data = await withdrawAcceptedProposal({
-      proposalId: req.params.proposalId,
+      proposalId: req.params.proposalId as string,
       plannerId,
     });
 
@@ -166,7 +169,7 @@ export async function getPlannerReceivedProposalDetailController(
 
   try {
     const data = await getReceivedDirectProposalDetail(
-      req.params.proposalId,
+      req.params.proposalId as string,
       plannerId,
     );
     res.json({ success: true, data });
@@ -194,7 +197,7 @@ export async function acceptPlannerReceivedProposalController(
 
   try {
     const data = await acceptReceivedDirectProposal({
-      proposalId: req.params.proposalId,
+      proposalId: req.params.proposalId as string,
       plannerId,
     });
 
@@ -225,7 +228,7 @@ export async function rejectPlannerReceivedProposalController(
 
   try {
     const data = await rejectReceivedDirectProposal({
-      proposalId: req.params.proposalId,
+      proposalId: req.params.proposalId as string,
       plannerId,
     });
 

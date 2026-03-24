@@ -10,7 +10,6 @@ type CreateDirectProposalInput = {
   travelStyle: string;
   interests: string[];
   extraNotes?: string;
-  message: string;
 };
 
 export async function createDirectProposal(input: CreateDirectProposalInput) {
@@ -40,7 +39,6 @@ export async function createDirectProposal(input: CreateDirectProposalInput) {
       travelStyle: input.travelStyle,
       interests: input.interests,
       extraNotes: input.extraNotes ?? "",
-      message: input.message,
       status: "pending",
     },
   });

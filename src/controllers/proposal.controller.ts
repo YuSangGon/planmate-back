@@ -40,7 +40,7 @@ export async function createRequestProposal(req: Request, res: Response) {
 
 export async function getRequestProposals(req: Request, res: Response) {
   const travellerId = req.auth?.sub;
-  const requestId = req.params.requestId;
+  const requestId = req.params.requestId as string;
 
   if (!travellerId) {
     res.status(401).json({
@@ -73,7 +73,7 @@ export async function getRequestProposals(req: Request, res: Response) {
 
 export async function acceptRequestProposal(req: Request, res: Response) {
   const travellerId = req.auth?.sub;
-  const proposalId = req.params.proposalId;
+  const proposalId = req.params.proposalId as string;
 
   if (!travellerId) {
     res.status(401).json({
@@ -106,7 +106,7 @@ export async function acceptRequestProposal(req: Request, res: Response) {
 
 export async function rejectRequestProposal(req: Request, res: Response) {
   const travellerId = req.auth?.sub;
-  const proposalId = req.params.proposalId;
+  const proposalId = req.params.proposalId as string;
 
   if (!travellerId) {
     res.status(401).json({

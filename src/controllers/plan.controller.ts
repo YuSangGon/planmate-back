@@ -37,7 +37,7 @@ export async function getMyPlans(req: Request, res: Response) {
 }
 
 export async function getPlanDetail(req: Request, res: Response) {
-  const plan = await getPlanById(req.params.planId);
+  const plan = await getPlanById(req.params.planId as string);
 
   if (!plan) {
     res.status(404).json({
@@ -120,7 +120,7 @@ export async function deletePlannerPlan(req: Request, res: Response) {
   }
 
   try {
-    const result = await deletePlan(req.params.planId, plannerId);
+    const result = await deletePlan(req.params.planId as string, plannerId);
 
     res.json({
       success: true,

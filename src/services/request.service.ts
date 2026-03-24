@@ -92,7 +92,7 @@ export async function createTripRequest(input: CreateRequestInput) {
     throw new Error("Not enough coins to create this request");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     await tx.user.update({
       where: { id: input.travellerId },
       data: {
@@ -145,11 +145,11 @@ export async function completeRequest(input: {
     throw new Error("Coins were already transferred for this request");
   }
 
-  if (!["matched", "in_progress", "delivered"].includes(requestItem.status)) {
+  if (!["matched", "in_progress", "submitted"].includes(requestItem.status)) {
     throw new Error("This request cannot be completed yet");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     await tx.user.update({
       where: { id: requestItem.plannerId! },
       data: {

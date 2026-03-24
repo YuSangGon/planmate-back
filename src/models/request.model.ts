@@ -2,7 +2,7 @@ export type RequestStatus =
   | "open"
   | "matched"
   | "in_progress"
-  | "delivered"
+  | "submitted"
   | "completed"
   | "cancelled";
 

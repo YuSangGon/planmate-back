@@ -17,7 +17,7 @@ export async function getPlannerWorkPlan(req: Request, res: Response) {
 
   try {
     const data = await getOrCreateWorkPlan({
-      requestId: req.params.requestId,
+      requestId: req.params.requestId as string,
       plannerId,
     });
 
@@ -70,7 +70,7 @@ export async function submitPlannerWorkPlan(req: Request, res: Response) {
 
   try {
     const data = await submitWorkPlan({
-      requestId: req.params.requestId,
+      requestId: req.params.requestId as string,
       plannerId,
     });
 
@@ -99,7 +99,7 @@ export async function getTravellerPreviewPlanController(
 
   try {
     const data = await getTravellerPreviewPlan({
-      requestId: req.params.requestId,
+      requestId: req.params.requestId as string,
       travellerId,
     });
 
@@ -128,7 +128,7 @@ export async function approveTravellerPreviewPlanController(
 
   try {
     const data = await approveSubmittedPlan({
-      requestId: req.params.requestId,
+      requestId: req.params.requestId as string,
       travellerId,
     });
 

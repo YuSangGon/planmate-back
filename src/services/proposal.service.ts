@@ -1,4 +1,9 @@
 import { prisma } from "../lib/prisma";
+import {
+  createRequestSystemMessage,
+  ensureRequestChatRoom,
+} from "../services/requestChatService";
+import { emitUserNotification } from "../lib/socket";
 
 export async function getSentProposalsForPlanner(plannerId: string) {
   return prisma.matchProposal.findMany({
@@ -151,7 +156,7 @@ export async function withdrawAcceptedProposal(input: {
     throw new Error("Only accepted proposals can be withdrawn");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const updatedProposal = await tx.matchProposal.update({
       where: { id: input.proposalId },
       data: { status: "withdrawn" },
@@ -273,7 +278,7 @@ export async function acceptProposal(input: {
     throw new Error("This request is no longer open");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const acceptedProposal = await tx.matchProposal.update({
       where: { id: input.proposalId },
       data: { status: "accepted" },
@@ -323,9 +328,31 @@ export async function acceptProposal(input: {
       },
     });
 
+    await ensureRequestChatRoom(proposal.requestId);
+
+    await createRequestSystemMessage(
+      proposal.requestId,
+      `${acceptedProposal.planner.name} matched with this request. Chat is now available.`,
+    );
+
+    emitUserNotification(proposal.plannerId, {
+      type: "proposal_accepted",
+      title: "Proposal accepted",
+      message: `Your proposal for was accepted.`,
+      requestId: proposal.requestId,
+      proposalId: proposal.id,
+    });
+
+    emitUserNotification(proposal.request.travellerId, {
+      type: "request_status_changed",
+      title: "Request matched",
+      message: `${proposal.request.destination} is now matched with a planner.`,
+      requestId: proposal.requestId,
+    });
+
     return {
       acceptedProposal,
-      rejectedProposalIds: rejectedProposals.map((item) => item.id),
+      rejectedProposalIds: rejectedProposals.map((item: any) => item.id),
       request: updatedRequest,
     };
   });

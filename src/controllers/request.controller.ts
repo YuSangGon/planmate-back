@@ -43,7 +43,7 @@ export async function getOpenRequestDetail(req: Request, res: Response) {
   const plannerId = req.auth?.sub;
 
   const requestItem = await getOpenRequestById({
-    requestId: req.params.requestId,
+    requestId: req.params.requestId as string,
     plannerId,
   });
 
@@ -104,7 +104,7 @@ export async function completeTravellerRequest(req: Request, res: Response) {
 
   try {
     const request = await completeRequest({
-      requestId: req.params.requestId,
+      requestId: req.params.requestId as string,
       travellerId,
     });
 

@@ -16,7 +16,7 @@ enum RequestStatus {
   open
   matched
   in_progress
-  delivered
+  submitted
   completed
   cancelled
 }
@@ -74,6 +74,7 @@ model User {
 
   directProposalsReceived DirectProposal[] @relation("DirectProposalsReceived")
   directProposalsSent     DirectProposal[] @relation("DirectProposalsSent")
+  sentRequestMessages   ChatMessages[] @relation("RequestMessageSender")
 }
 
 model PlannerReview {
@@ -139,6 +140,7 @@ model Request {
 
   plans     Plan[]
   proposals MatchProposal[]
+  chatRoom     ChatRoom?
 
   @@index([travellerId])
   @@index([plannerId])
@@ -190,4 +192,32 @@ model MatchProposal {
   @@index([requestId])
   @@index([plannerId])
   @@index([status])
+}
+
+model ChatRoom {
+  id         String           @id @default(cuid())
+  requestId   String           @unique
+  request     Request          @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  messages   ChatMessages[]
+}
+
+model ChatMessages {
+  id         String           @id @default(cuid())
+  roomId      String
+  room        ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  senderId    String?
+  sender      User?           @relation("RequestMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  content     String
+  isSystem    Boolean         @default(false)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([roomId, createdAt])
 }

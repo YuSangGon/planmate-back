@@ -10,6 +10,7 @@ import dashboardRoutes from "./dashboard.routes";
 import walletRoutes from "./wallet.routes";
 import plannerProposalRoutes from "./plannerProposal.routes";
 import workPlanRoutes from "./workPlan.routes";
+import requestChatRoutes from "./requestChat.routes";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/dashboard", dashboardRoutes);
 router.use("/wallet", walletRoutes);
 router.use("/planner-proposals", plannerProposalRoutes);
 router.use("/requests", workPlanRoutes);
+router.use("/requests", requestChatRoutes);
 
 export default router;
