@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { buildFixedWorkPlanPreview } from "./workPlanPreview.util";
 
 type WorkPlanContent = {
   days: Array<{
@@ -159,15 +160,18 @@ export async function submitWorkPlan(input: {
     throw new Error("Work plan not found");
   }
 
-  if (plan.status !== "draft") {
-    throw new Error("Only draft plans can be submitted");
-  }
+  // if (plan.status !== "draft") {
+  //   throw new Error("Only draft plans can be submitted");
+  // }
+
+  const previewContent = buildFixedWorkPlanPreview(plan.content as any, 3);
 
   return prisma.$transaction(async (tx: any) => {
     const updatedPlan = await tx.plan.update({
       where: { id: plan.id },
       data: {
         status: "submitted",
+        previewContent,
       },
     });
 
@@ -222,7 +226,17 @@ export async function getTravellerPreviewPlan(input: {
     throw new Error("Submitted plan not found");
   }
 
-  return plan;
+  return {
+    id: plan.id,
+    requestId: plan.requestId,
+    title: plan.title,
+    summary: plan.summary,
+    duration: plan.duration,
+    destination: plan.destination,
+    status: plan.status,
+    planner: plan.planner,
+    previewContent: plan.previewContent,
+  };
 }
 
 export async function approveSubmittedPlan(input: {
@@ -293,3 +307,42 @@ export async function approveSubmittedPlan(input: {
     return updatedPlan;
   });
 }
+
+// export async function getTravellerPreviewPlanService(
+//   requestId: string,
+//   travellerId: string,
+// ) {
+//   const workPlan = await prisma.workPlan.findUnique({
+//     where: { requestId },
+//     include: {
+//       request: true,
+//       planner: {
+//         select: {
+//           id: true,
+//           name: true,
+//           bio: true,
+//         },
+//       },
+//     },
+//   });
+
+//   if (!workPlan) {
+//     throw new Error("Preview plan not found");
+//   }
+
+//   if (workPlan.request.travellerId !== travellerId) {
+//     throw new Error("Forbidden");
+//   }
+
+//   return {
+//     id: workPlan.id,
+//     requestId: workPlan.requestId,
+//     title: workPlan.title,
+//     summary: workPlan.summary,
+//     duration: workPlan.duration,
+//     destination: workPlan.destination,
+//     status: workPlan.status,
+//     planner: workPlan.planner,
+//     previewContent: workPlan.previewContent,
+//   };
+// }

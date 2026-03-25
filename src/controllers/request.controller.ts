@@ -2,16 +2,34 @@ import type { Request, Response } from "express";
 import {
   completeRequest,
   createTripRequest,
-  getOpenRequestById,
-  getOpenRequestsForPlanner,
-  getRequestsForTraveller,
+  getRequestDetailById,
+  getRequestList,
+  getMyRequestList,
 } from "../services/request.service";
+
+export async function getRequests(req: Request, res: Response) {
+  // const userId = req.auth?.sub;
+
+  // if (!userId) {
+  //   res.status(401).json({
+  //     success: false,
+  //     message: "Unauthorized",
+  //   });
+  //   return;
+  // }
+
+  const data = await getRequestList();
+
+  res.json({
+    success: true,
+    data,
+  });
+}
 
 export async function getMyRequests(req: Request, res: Response) {
   const userId = req.auth?.sub;
-  const role = req.auth?.role;
 
-  if (!userId || !role) {
+  if (!userId) {
     res.status(401).json({
       success: false,
       message: "Unauthorized",
@@ -19,10 +37,7 @@ export async function getMyRequests(req: Request, res: Response) {
     return;
   }
 
-  const data =
-    role === "planner"
-      ? await getOpenRequestsForPlanner()
-      : await getRequestsForTraveller(userId);
+  const data = await getMyRequestList(userId);
 
   res.json({
     success: true,
@@ -30,19 +45,10 @@ export async function getMyRequests(req: Request, res: Response) {
   });
 }
 
-export async function getOpenRequests(_req: Request, res: Response) {
-  const data = await getOpenRequestsForPlanner();
-
-  res.json({
-    success: true,
-    data,
-  });
-}
-
-export async function getOpenRequestDetail(req: Request, res: Response) {
+export async function getMyRequestDetail(req: Request, res: Response) {
   const plannerId = req.auth?.sub;
 
-  const requestItem = await getOpenRequestById({
+  const requestItem = await getRequestDetailById({
     requestId: req.params.requestId as string,
     plannerId,
   });
@@ -50,7 +56,7 @@ export async function getOpenRequestDetail(req: Request, res: Response) {
   if (!requestItem) {
     res.status(404).json({
       success: false,
-      message: "Open request not found",
+      message: "Request not found",
     });
     return;
   }

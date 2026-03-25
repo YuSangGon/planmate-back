@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  traveller
-  planner
-}
-
 enum RequestStatus {
   open
   matched
@@ -30,7 +25,7 @@ enum MatchProposalStatus {
   pending
   accepted
   rejected
-  withdrawn
+  cancelled
 }
 
 enum DirectProposalStatus {
@@ -46,19 +41,17 @@ enum PlanStatus {
   approved
 }
 
+enum PlanType {
+  request
+  personal
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
   passwordHash  String
-  role          UserRole
   bio           String?
-  specialty     String?
-  rating        Float?    @default(0)
-  reviewCount   Int       @default(0)
-  location      String?
-  responseRate  String?
-  strengths     String[]
   coinBalance   Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -69,28 +62,55 @@ model User {
   travellerPlans    Plan[]          @relation("TravellerPlans")
   proposals         MatchProposal[] @relation("PlannerProposals")
 
-  reviewsReceived   PlannerReview[] @relation("PlannerReviewsReceived")
-  reviewsWritten    PlannerReview[] @relation("PlannerReviewsWritten")
+  travellerWrittenReviews PlannerReview[] @relation("TravellerWrittenReviews")
+  plannerReceivedReviews  PlannerReview[] @relation("PlannerReceivedReviews")
+  planReviews             PlanReview[]    @relation("UserWrittenReviews")
 
   directProposalsReceived DirectProposal[] @relation("DirectProposalsReceived")
   directProposalsSent     DirectProposal[] @relation("DirectProposalsSent")
   sentRequestMessages   ChatMessages[] @relation("RequestMessageSender")
+  plannerReviewSummary     PlannerReviewSummary?
+}
+
+model PlannerReviewSummary {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewCount     Int      @default(0)
+  rating          Float    @default(0)
+  planQuality     Float    @default(0)
+  communication   Float    @default(0)
+  timeliness      Float    @default(0)
+  personalisation Float    @default(0)
+  practicality    Float    @default(0)
+  detailLevel     Float    @default(0)
+  strengths       String   @default("")
+
+  updatedAt       DateTime @updatedAt
 }
 
 model PlannerReview {
-  id          String   @id @default(cuid())
-  plannerId   String
-  travellerId String
-  rating      Int
-  content     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  requestId       String   @unique
+  request         Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
-  planner   User @relation("PlannerReviewsReceived", fields: [plannerId], references: [id], onDelete: Cascade)
-  traveller User @relation("PlannerReviewsWritten", fields: [travellerId], references: [id], onDelete: Cascade)
+  travellerId     String
+  traveller       User     @relation("TravellerWrittenReviews", fields: [travellerId], references: [id], onDelete: Cascade)
 
-  @@index([plannerId])
-  @@index([travellerId])
+  plannerId       String
+  planner         User     @relation("PlannerReceivedReviews", fields: [plannerId], references: [id], onDelete: Cascade)
+
+  overallRating   Int
+  planQuality     Int
+  communication   Int
+  timeliness      Int
+  personalisation Int
+  practicality    Int
+  detailLevel     Int
+
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model DirectProposal {
@@ -137,6 +157,7 @@ model Request {
 
   traveller User  @relation("TravellerRequests", fields: [travellerId], references: [id], onDelete: Cascade)
   planner   User? @relation("PlannerRequests", fields: [plannerId], references: [id], onDelete: SetNull)
+  plannerReview PlannerReview?
 
   plans     Plan[]
   proposals MatchProposal[]
@@ -149,6 +170,7 @@ model Request {
 
 model Plan {
   id          String         @id @default(cuid())
+  planType    PlanType       @default(personal)
   requestId   String?
   plannerId   String
   travellerId String?
@@ -160,6 +182,7 @@ model Plan {
   visibility  PlanVisibility @default(private)
   status      PlanStatus     @default(draft)
   content     Json?
+  previewContent  Json?
   tags        String[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -167,11 +190,45 @@ model Plan {
   request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
   planner   User     @relation("PlannerPlans", fields: [plannerId], references: [id], onDelete: Cascade)
   traveller User?    @relation("TravellerPlans", fields: [travellerId], references: [id], onDelete: SetNull)
+  planReviewSummary  PlanReviewSummary?
+  planReviews        PlanReview[] @relation("PlanReceivedReviews")
 
   @@index([plannerId])
   @@index([travellerId])
   @@index([visibility])
   @@index([status])
+}
+
+model PlanReviewSummary {
+  id              String   @id @default(cuid())
+  planId          String   @unique
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  reviewCount     Int      @default(0)
+  rating          Float    @default(0)
+  planQuality     Float    @default(0)
+  practicality    Float    @default(0)
+  detailLevel     Float    @default(0)
+
+  updatedAt       DateTime @updatedAt
+}
+
+model PlanReview {
+  id              String   @id @default(cuid())
+
+  userId       String
+  user         User     @relation("UserWrittenReviews", fields: [userId], references: [id], onDelete: Cascade)
+  planId       String
+  plan         Plan     @relation("PlanReceivedReviews", fields: [planId], references: [id], onDelete: Cascade)
+
+  overallRating   Int
+  planQuality     Int
+  practicality    Int
+  detailLevel     Int
+
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model MatchProposal {

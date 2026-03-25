@@ -14,6 +14,7 @@ import requestChatRoutes from "./requestChat.routes";
 
 const router = Router();
 
+// TODO : Proposals + direct-proposals 부분 합쳐야 할듯
 router.use("/health", healthRoutes);
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -23,7 +24,7 @@ router.use("/proposals", proposalRoutes);
 router.use("/planners", plannerRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/wallet", walletRoutes);
-router.use("/planner-proposals", plannerProposalRoutes);
+router.use("/direct-proposals", plannerProposalRoutes);
 router.use("/requests", workPlanRoutes);
 router.use("/requests", requestChatRoutes);
 

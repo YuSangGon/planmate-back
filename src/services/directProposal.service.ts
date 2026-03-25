@@ -16,7 +16,6 @@ export async function createDirectProposal(input: CreateDirectProposalInput) {
   const planner = await prisma.user.findFirst({
     where: {
       id: input.plannerId,
-      role: "planner",
     },
   });
 

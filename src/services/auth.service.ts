@@ -1,13 +1,11 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
-import type { UserRole } from "../types/api";
 import { signAccessToken } from "./token.service";
 
 type SignupInput = {
   name: string;
   email: string;
   password: string;
-  role: UserRole;
 };
 
 type LoginInput = {
@@ -19,7 +17,6 @@ function sanitizeUser(user: {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
   bio: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -28,7 +25,6 @@ function sanitizeUser(user: {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role,
     bio: user.bio ?? "",
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
@@ -51,7 +47,6 @@ export async function signupUser(input: SignupInput) {
       name: input.name,
       email: input.email,
       passwordHash,
-      role: input.role,
       bio: "",
     },
   });
@@ -59,7 +54,6 @@ export async function signupUser(input: SignupInput) {
   const accessToken = signAccessToken({
     sub: user.id,
     email: user.email,
-    role: user.role,
   });
 
   return {
@@ -89,7 +83,6 @@ export async function loginUser(input: LoginInput) {
   const accessToken = signAccessToken({
     sub: user.id,
     email: user.email,
-    role: user.role,
   });
 
   return {

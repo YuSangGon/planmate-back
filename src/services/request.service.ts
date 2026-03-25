@@ -13,28 +13,27 @@ type CreateRequestInput = {
   extraNotes?: string;
 };
 
-export async function getRequestsForTraveller(travellerId: string) {
+export async function getMyRequestList(travellerId: string) {
   return prisma.request.findMany({
     where: { travellerId },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getOpenRequestsForPlanner() {
+export async function getRequestList() {
   return prisma.request.findMany({
     where: { status: "open" },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getOpenRequestById(input: {
+export async function getRequestDetailById(input: {
   requestId: string;
   plannerId?: string;
 }) {
   const requestItem = await prisma.request.findFirst({
     where: {
       id: input.requestId,
-      status: "open",
     },
     include: {
       traveller: {

@@ -78,6 +78,30 @@ export async function getPlanById(planId: string) {
   });
 }
 
+export async function getPlanByIdWithReview(planId: string) {
+  // TODO : 리뷰도 가져오기
+  return prisma.plan.findUnique({
+    where: { id: planId },
+    include: {
+      planner: {
+        select: {
+          id: true,
+          name: true,
+          bio: true,
+          specialty: true,
+        },
+      },
+      request: {
+        select: {
+          id: true,
+          destination: true,
+          status: true,
+        },
+      },
+    },
+  });
+}
+
 export async function createPlan(input: CreatePlanInput) {
   return prisma.plan.create({
     data: {

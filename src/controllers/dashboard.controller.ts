@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { getSentProposalsForPlanner } from "../services/proposal.service";
 import { getReceivedDirectProposalsForPlanner } from "../services/directProposal.service";
 import { getPlansForPlanner } from "../services/plan.service";
-import { getReceivedReviewsForPlanner } from "../services/review.service";
+// import { getReceivedReviewsForPlanner } from "../services/review.service";
 
 export async function getPlannerSentProposals(req: Request, res: Response) {
   const plannerId = req.auth?.sub;
@@ -64,21 +64,21 @@ export async function getPlannerOwnPlans(req: Request, res: Response) {
   });
 }
 
-export async function getPlannerReceivedReviews(req: Request, res: Response) {
-  const plannerId = req.auth?.sub;
+// export async function getPlannerReceivedReviews(req: Request, res: Response) {
+//   const plannerId = req.auth?.sub;
 
-  if (!plannerId) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
-    return;
-  }
+//   if (!plannerId) {
+//     res.status(401).json({
+//       success: false,
+//       message: "Unauthorized",
+//     });
+//     return;
+//   }
 
-  const data = await getReceivedReviewsForPlanner(plannerId);
+//   const data = await getReceivedReviewsForPlanner(plannerId);
 
-  res.json({
-    success: true,
-    data,
-  });
-}
+//   res.json({
+//     success: true,
+//     data,
+//   });
+// }

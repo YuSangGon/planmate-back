@@ -1,5 +1,3 @@
-export type UserRole = "traveller" | "planner";
-
 export type ApiSuccess<T> = {
   success: true;
   data: T;
@@ -15,7 +13,6 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
 };
 
 export type Plan = {
@@ -33,5 +30,4 @@ export type TripRequest = {
   travelStyle: string;
   interests: string;
   extraNotes: string;
-  requesterRole: UserRole;
 };

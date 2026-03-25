@@ -1,44 +1,34 @@
 import { prisma } from "../lib/prisma";
+import { getPlannerReviewSummaryService } from "./review.service";
 
 export async function getPlanners() {
+  // TODO : 리뷰 서머리에서 대략적인 리뷰 가져요기
   const planners = await prisma.user.findMany({
     where: { role: "planner" },
     select: {
       id: true,
       name: true,
       bio: true,
-      specialty: true,
-      rating: true,
-      reviewCount: true,
       _count: {
         select: {
           plannerPlans: true,
         },
       },
     },
-    orderBy: [
-      { rating: "desc" },
-      { reviewCount: "desc" },
-      { createdAt: "desc" },
-    ],
+    orderBy: [{ createdAt: "desc" }],
   });
 
-  return planners.map((planner) => ({
+  return planners.map((planner: any) => ({
     id: planner.id,
     name: planner.name,
-    specialty: planner.specialty || "Travel planning",
     description:
       planner.bio || "Enjoys creating thoughtful and practical travel plans.",
-    rating: planner.rating ? planner.rating.toFixed(1) : "New",
-    reviews:
-      planner.reviewCount > 0
-        ? `${planner.reviewCount} reviews`
-        : "No reviews yet",
     completedPlans: planner._count.plannerPlans,
   }));
 }
 
 export async function getPlannerById(plannerId: string) {
+  // TODO : 리뷰 가져오는 부분 추가
   const planner = await prisma.user.findFirst({
     where: {
       id: plannerId,
@@ -48,12 +38,6 @@ export async function getPlannerById(plannerId: string) {
       id: true,
       name: true,
       bio: true,
-      specialty: true,
-      rating: true,
-      reviewCount: true,
-      location: true,
-      responseRate: true,
-      strengths: true,
       _count: {
         select: {
           plannerPlans: true,
@@ -76,19 +60,19 @@ export async function getPlannerById(plannerId: string) {
           createdAt: "desc",
         },
       },
-      reviewsReceived: {
-        include: {
-          traveller: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
+      // plannerReceivedReviews: {
+      //   include: {
+      //     traveller: {
+      //       select: {
+      //         id: true,
+      //         name: true,
+      //       },
+      //     },
+      //   },
+      //   orderBy: {
+      //     createdAt: "desc",
+      //   },
+      // },
     },
   });
 
@@ -99,21 +83,12 @@ export async function getPlannerById(plannerId: string) {
   return {
     id: planner.id,
     name: planner.name,
-    specialty: planner.specialty || "Travel planning",
     description:
       planner.bio || "Enjoys creating thoughtful and practical travel plans.",
-    rating: planner.rating ? planner.rating.toFixed(1) : "New",
-    reviews:
-      planner.reviewCount > 0
-        ? `${planner.reviewCount} reviews`
-        : "No reviews yet",
     completedPlans: planner._count.plannerPlans,
-    responseRate: planner.responseRate || "—",
-    location: planner.location || "Not specified",
     intro:
       planner.bio || "This planner has not added a detailed introduction yet.",
-    strengths: planner.strengths ?? [],
-    plannerPlans: planner.plannerPlans.map((plan) => ({
+    plannerPlans: planner.plannerPlans.map((plan: any) => ({
       id: plan.id,
       title: plan.title,
       destination: plan.destination,
@@ -122,12 +97,49 @@ export async function getPlannerById(plannerId: string) {
       summary: plan.summary,
       tags: plan.tags,
     })),
-    plannerReviews: planner.reviewsReceived.map((review) => ({
-      id: review.id,
-      author: review.traveller.name,
-      rating: review.rating,
-      content: review.content,
-      createdAt: review.createdAt.toISOString(),
-    })),
+    // plannerReviews: planner.plannerReceivedReviews.map((review: any) => ({
+    //   id: review.id,
+    //   author: review.traveller.name,
+    //   rating: review.rating,
+    //   content: review.content,
+    //   createdAt: review.createdAt.toISOString(),
+    // })),
+  };
+}
+
+export async function getPlannerDetailService(plannerId: string) {
+  const planner = await prisma.user.findFirst({
+    where: {
+      id: plannerId,
+      role: "planner",
+    },
+    include: {
+      plannerReceivedReviews: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          traveller: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+      plannerPlans: {
+        where: { visibility: "public" },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  if (!planner) {
+    throw new Error("Planner not found");
+  }
+
+  const reviewSummary = await getPlannerReviewSummaryService(plannerId);
+
+  return {
+    ...planner,
+    reviewSummary,
   };
 }

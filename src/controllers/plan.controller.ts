@@ -6,6 +6,7 @@ import {
   getPlansForPlanner,
   getPublicPlans,
   updatePlan,
+  getPlanByIdWithReview,
 } from "../services/plan.service";
 
 export async function getPlans(_req: Request, res: Response) {
@@ -37,7 +38,7 @@ export async function getMyPlans(req: Request, res: Response) {
 }
 
 export async function getPlanDetail(req: Request, res: Response) {
-  const plan = await getPlanById(req.params.planId as string);
+  const plan = await getPlanByIdWithReview(req.params.planId as string);
 
   if (!plan) {
     res.status(404).json({
@@ -86,6 +87,15 @@ export async function updatePlannerPlan(req: Request, res: Response) {
     return;
   }
 
+  const plan = await getPlanById(req.params.planId as string);
+  if (plannerId !== plan.planner.id) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
   try {
     const plan = await updatePlan({
       planId: req.params.planId,
@@ -112,6 +122,15 @@ export async function deletePlannerPlan(req: Request, res: Response) {
   const plannerId = req.auth?.sub;
 
   if (!plannerId) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  const plan = await getPlanById(req.params.planId as string);
+  if (plannerId !== plan.planner.id) {
     res.status(401).json({
       success: false,
       message: "Unauthorized",

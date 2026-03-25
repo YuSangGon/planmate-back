@@ -2,48 +2,26 @@ import { Router } from "express";
 import {
   completeTravellerRequest,
   createRequest,
+  getRequests,
+  getMyRequestDetail,
   getMyRequests,
-  getOpenRequestDetail,
-  getOpenRequests,
 } from "../controllers/request.controller";
 import { getRequestProposals } from "../controllers/proposal.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
-import { requireRole } from "../middlewares/requireRole.middleware";
 import { validateBody } from "../middlewares/validate.middleware";
 import { createRequestSchema } from "../schemas/request.schema";
 
 const router = Router();
 
-router.get("/", requireAuth, getMyRequests);
+router.get("/", getRequests);
 
-router.get("/open", requireAuth, requireRole(["planner"]), getOpenRequests);
-router.get(
-  "/open/:requestId",
-  requireAuth,
-  requireRole(["planner"]),
-  getOpenRequestDetail,
-);
+router.get("/mine", requireAuth, getMyRequests);
+router.get("/mine/:requestId", requireAuth, getMyRequestDetail);
 
-router.get(
-  "/:requestId/proposals",
-  requireAuth,
-  requireRole(["traveller"]),
-  getRequestProposals,
-);
+router.get("/:requestId/proposals", requireAuth, getRequestProposals);
 
-router.post(
-  "/",
-  requireAuth,
-  requireRole(["traveller"]),
-  validateBody(createRequestSchema),
-  createRequest,
-);
+router.post("/", requireAuth, validateBody(createRequestSchema), createRequest);
 
-router.post(
-  "/:requestId/complete",
-  requireAuth,
-  requireRole(["traveller"]),
-  completeTravellerRequest,
-);
+router.post("/:requestId/complete", requireAuth, completeTravellerRequest);
 
 export default router;
