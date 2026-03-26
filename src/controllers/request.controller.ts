@@ -45,7 +45,7 @@ export async function getMyRequests(req: Request, res: Response) {
   });
 }
 
-export async function getMyRequestDetail(req: Request, res: Response) {
+export async function getRequestDetail(req: Request, res: Response) {
   const plannerId = req.auth?.sub;
 
   const requestItem = await getRequestDetailById({

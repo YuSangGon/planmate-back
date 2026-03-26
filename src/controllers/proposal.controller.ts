@@ -64,7 +64,7 @@ export async function getRequestProposals(req: Request, res: Response) {
     const message =
       error instanceof Error ? error.message : "Failed to get proposals";
 
-    res.status(message === "Forbidden" ? 403 : 400).json({
+    res.status(message === "Request not found" ? 404 : 400).json({
       success: false,
       message,
     });

@@ -3,7 +3,7 @@ import {
   completeTravellerRequest,
   createRequest,
   getRequests,
-  getMyRequestDetail,
+  getRequestDetail,
   getMyRequests,
 } from "../controllers/request.controller";
 import { getRequestProposals } from "../controllers/proposal.controller";
@@ -16,7 +16,7 @@ const router = Router();
 router.get("/", getRequests);
 
 router.get("/mine", requireAuth, getMyRequests);
-router.get("/mine/:requestId", requireAuth, getMyRequestDetail);
+router.get("/:requestId", requireAuth, getRequestDetail);
 
 router.get("/:requestId/proposals", requireAuth, getRequestProposals);
 

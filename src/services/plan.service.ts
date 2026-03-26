@@ -88,7 +88,6 @@ export async function getPlanByIdWithReview(planId: string) {
           id: true,
           name: true,
           bio: true,
-          specialty: true,
         },
       },
       request: {

@@ -235,10 +235,13 @@ export async function getProposalsForTravellerRequest(input: {
   }
 
   if (request.travellerId !== input.travellerId) {
-    throw new Error("Forbidden");
+    return {
+      canView: false,
+      items: [],
+    };
   }
 
-  return prisma.matchProposal.findMany({
+  const items = await prisma.matchProposal.findMany({
     where: { requestId: input.requestId },
     include: {
       planner: {
@@ -247,12 +250,16 @@ export async function getProposalsForTravellerRequest(input: {
           name: true,
           email: true,
           bio: true,
-          role: true,
         },
       },
     },
     orderBy: { createdAt: "desc" },
   });
+
+  return {
+    canView: true,
+    items,
+  };
 }
 
 export async function acceptProposal(input: {

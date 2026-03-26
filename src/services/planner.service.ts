@@ -4,7 +4,6 @@ import { getPlannerReviewSummaryService } from "./review.service";
 export async function getPlanners() {
   // TODO : 리뷰 서머리에서 대략적인 리뷰 가져요기
   const planners = await prisma.user.findMany({
-    where: { role: "planner" },
     select: {
       id: true,
       name: true,
@@ -32,7 +31,6 @@ export async function getPlannerById(plannerId: string) {
   const planner = await prisma.user.findFirst({
     where: {
       id: plannerId,
-      role: "planner",
     },
     select: {
       id: true,
@@ -111,7 +109,6 @@ export async function getPlannerDetailService(plannerId: string) {
   const planner = await prisma.user.findFirst({
     where: {
       id: plannerId,
-      role: "planner",
     },
     include: {
       plannerReceivedReviews: {
