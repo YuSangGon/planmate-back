@@ -46,6 +46,15 @@ enum PlanType {
   personal
 }
 
+enum PlanChangeSection {
+  basic_info
+  overview
+  preparation
+  hotels
+  daily_timetable
+  extras
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -64,12 +73,34 @@ model User {
 
   travellerWrittenReviews PlannerReview[] @relation("TravellerWrittenReviews")
   plannerReceivedReviews  PlannerReview[] @relation("PlannerReceivedReviews")
+
+  PlannerWrittenReports ReportTraveller[] @relation("PlannerWrittenReports")
+  TravellerReceivedReorts  ReportTraveller[] @relation("TravellerReceivedReorts")
+
   planReviews             PlanReview[]    @relation("UserWrittenReviews")
 
   directProposalsReceived DirectProposal[] @relation("DirectProposalsReceived")
   directProposalsSent     DirectProposal[] @relation("DirectProposalsSent")
+
   sentRequestMessages   ChatMessages[] @relation("RequestMessageSender")
   plannerReviewSummary     PlannerReviewSummary?
+}
+
+model ReportTraveller {
+  id              String   @id @default(cuid())
+
+  requestId       String   @unique
+  request         Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  travellerId     String
+  traveller       User     @relation("PlannerWrittenReports", fields: [travellerId], references: [id], onDelete: Cascade)
+
+  plannerId       String
+  planner         User     @relation("TravellerReceivedReorts", fields: [plannerId], references: [id], onDelete: Cascade)
+
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model PlannerReviewSummary {
@@ -154,10 +185,12 @@ model Request {
   coinTransferred  Boolean       @default(false)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  completedAt      DateTime?    
 
   traveller User  @relation("TravellerRequests", fields: [travellerId], references: [id], onDelete: Cascade)
   planner   User? @relation("PlannerRequests", fields: [plannerId], references: [id], onDelete: SetNull)
   plannerReview PlannerReview?
+  ReportTraveller ReportTraveller?
 
   plans     Plan[]
   proposals MatchProposal[]
@@ -169,34 +202,52 @@ model Request {
 }
 
 model Plan {
-  id          String         @id @default(cuid())
-  planType    PlanType       @default(personal)
-  requestId   String?
-  plannerId   String
-  travellerId String?
-  title       String
-  destination String
-  summary     String
-  price       Int
-  duration    String
-  visibility  PlanVisibility @default(private)
-  status      PlanStatus     @default(draft)
-  content     Json?
-  previewContent  Json?
-  tags        String[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  planType       PlanType       @default(personal)
+  requestId      String?
+  plannerId      String
+  travellerId    String?
+  title          String?
+  destination    String?
+  summary        String?
+  price          Int?
+  duration       String?
+  visibility     PlanVisibility @default(private)
+  status         PlanStatus     @default(draft)
+  content        Json?
+  previewContent Json?
+  tags           String[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  submittedAt    DateTime?
+  lastEditedAt   DateTime?
+  lastEditNote   String?
+  lastEditedSection String?
 
   request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
   planner   User     @relation("PlannerPlans", fields: [plannerId], references: [id], onDelete: Cascade)
   traveller User?    @relation("TravellerPlans", fields: [travellerId], references: [id], onDelete: SetNull)
+
   planReviewSummary  PlanReviewSummary?
   planReviews        PlanReview[] @relation("PlanReceivedReviews")
+  changeLogs         PlanChangeLog[]
 
   @@index([plannerId])
   @@index([travellerId])
   @@index([visibility])
   @@index([status])
+}
+
+model PlanChangeLog {
+  id         String            @id @default(cuid())
+  planId      String
+  plan        Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  section     String
+  createdAt   DateTime          @default(now())
+
+  @@index([planId, createdAt])
 }
 
 model PlanReviewSummary {
@@ -278,3 +329,26 @@ model ChatMessages {
 
   @@index([roomId, createdAt])
 }
+
+model ShopItems {
+  id        String      @id @default(cuid())
+  itemCode  String      @unique
+  itemName  String
+  coins     Int
+  mainDescription String
+  subDescription String
+
+  prices ShopItemPrices[]
+}
+
+model ShopItemPrices {
+  id      String    @id @default(cuid())
+
+  shopItemId   String
+  shopItem      ShopItems @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+
+  countryCode  String
+  price       Float
+  isSale      Boolean   @default(false)
+  salePrice   Float     @default(0)
+} 

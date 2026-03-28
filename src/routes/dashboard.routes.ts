@@ -1,29 +1,86 @@
-import { Router } from "express";
-import {
-  getPlannerOwnPlans,
-  getPlannerReceivedDirectProposals,
-  // getPlannerReceivedReviews,
-  getPlannerSentProposals,
-} from "../controllers/dashboard.controller";
+import express from "express";
 import { requireAuth } from "../middlewares/auth.middleware";
+import {
+  getDashboardOverviewService,
+  getDashboardRequestsService,
+  getDashboardProposalsService,
+  getDashboardPlansService,
+} from "../services/dashboard.service";
 
-const router = Router();
+const router = express.Router();
 
-router.get("/planner/sent-proposals", requireAuth, getPlannerSentProposals);
+router.use(requireAuth);
 
-router.get(
-  "/planner/received-direct-proposals",
-  requireAuth,
-  getPlannerReceivedDirectProposals,
-);
+router.get("/overview", async (req, res) => {
+  try {
+    const userId = req.auth!.sub;
+    const data = await getDashboardOverviewService(userId);
 
-router.get("/planner/plans", requireAuth, getPlannerOwnPlans);
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to load dashboard overview";
 
-// TODO : 리뷰 끌어오는 부분
-// router.get(
-//   "/planner/reviews",
-//   requireAuth,
-//   getPlannerReceivedReviews,
-// );
+    return res.status(500).json({ success: false, message });
+  }
+});
+
+router.get("/requests", async (req, res) => {
+  try {
+    const userId = req.auth!.sub;
+    const data = await getDashboardRequestsService(userId);
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load active requests";
+
+    return res.status(500).json({ success: false, message });
+  }
+});
+
+router.get("/proposals", async (req, res) => {
+  try {
+    const userId = req.auth!.sub;
+    const data = await getDashboardProposalsService(userId);
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to load received proposals";
+
+    return res.status(500).json({ success: false, message });
+  }
+});
+
+router.get("/plans", async (req, res) => {
+  try {
+    const userId = req.auth!.sub;
+    const data = await getDashboardPlansService(userId);
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load dashboard plans";
+
+    return res.status(500).json({ success: false, message });
+  }
+});
 
 export default router;

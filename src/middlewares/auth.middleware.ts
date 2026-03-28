@@ -33,7 +33,6 @@ export function requireAuth(
     const decoded = jwt.verify(token, env.jwtAccessSecret) as {
       id: string;
       email: string;
-      role: string;
     };
 
     req.user = decoded;

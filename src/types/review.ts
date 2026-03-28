@@ -1,4 +1,4 @@
-export type CreateReviewInput = {
+export type PlannerReview = {
   requestId: string;
   overallRating: number;
   planQuality: number;

@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
-import type { CreateReviewInput, PlannerReviewSummary } from "../types/review";
+import type { PlannerReview, PlannerReviewSummary } from "../types/review";
+import { refreshPlannerReviewSummary } from "./plannerReviewSummary.service";
 
 function validateRating(value: number, fieldName: string) {
   if (!Number.isInteger(value) || value < 1 || value > 5) {
@@ -7,18 +8,21 @@ function validateRating(value: number, fieldName: string) {
   }
 }
 
-export async function createReviewService(
-  travellerId: string,
-  input: CreateReviewInput,
-) {
-  validateRating(input.overallRating, "overallRating");
+function validateReview(input: PlannerReview) {
+  // validateRating(input.overallRating, "overallRating");
   validateRating(input.planQuality, "planQuality");
   validateRating(input.communication, "communication");
   validateRating(input.timeliness, "timeliness");
   validateRating(input.personalisation, "personalisation");
   validateRating(input.practicality, "practicality");
   validateRating(input.detailLevel, "detailLevel");
+}
 
+export async function createReviewService(
+  travellerId: string,
+  input: PlannerReview,
+) {
+  validateReview(input);
   const request = await prisma.request.findUnique({
     where: { id: input.requestId },
     include: {
@@ -42,7 +46,7 @@ export async function createReviewService(
     throw new Error("Review can only be written after completion");
   }
 
-  const existingReview = await prisma.review.findUnique({
+  const existingReview = await prisma.plannerReview.findUnique({
     where: { requestId: input.requestId },
   });
 
@@ -50,7 +54,7 @@ export async function createReviewService(
     throw new Error("Review already exists");
   }
 
-  const review = await prisma.review.create({
+  const review = await prisma.plannerReview.create({
     data: {
       requestId: input.requestId,
       travellerId,
@@ -74,7 +78,54 @@ export async function createReviewService(
     },
   });
 
+  refreshPlannerReviewSummary(request.plannerId);
+
   return review;
+}
+
+export async function editReviewService(
+  travellerId: string,
+  input: PlannerReview,
+) {
+  validateReview(input);
+
+  const plannerReview = await prisma.plannerReview.findUnique({
+    where: { requestId: input.requestId },
+  });
+
+  if (!plannerReview) {
+    throw new Error("Review not found");
+  }
+
+  if (plannerReview.travellerId !== travellerId) {
+    throw new Error("Forbidden");
+  }
+
+  const review = await prisma.plannerReview.update({
+    data: {
+      overallRating: input.overallRating,
+      planQuality: input.planQuality,
+      communication: input.communication,
+      timeliness: input.timeliness,
+      personalisation: input.personalisation,
+      practicality: input.practicality,
+      detailLevel: input.detailLevel,
+      content: input.content.trim(),
+    },
+    where: {
+      id: plannerReview.id,
+    },
+  });
+
+  refreshPlannerReviewSummary(plannerReview.plannerId);
+
+  return review;
+}
+
+export async function getPlannerReviewForRequestService(requestId: string) {
+  return prisma.plannerReview.findUnique({
+    where: { requestId },
+  });
 }
 
 export async function getPlannerReviewSummaryService(

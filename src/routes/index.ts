@@ -11,6 +11,7 @@ import walletRoutes from "./wallet.routes";
 import plannerProposalRoutes from "./plannerProposal.routes";
 import workPlanRoutes from "./workPlan.routes";
 import requestChatRoutes from "./requestChat.routes";
+import reviewRoutes from "./review.routes";
 
 const router = Router();
 
@@ -25,7 +26,8 @@ router.use("/planners", plannerRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/wallet", walletRoutes);
 router.use("/direct-proposals", plannerProposalRoutes);
-router.use("/requests", workPlanRoutes);
+router.use("/work-plan", workPlanRoutes);
 router.use("/requests", requestChatRoutes);
+router.use("/review", reviewRoutes);
 
 export default router;

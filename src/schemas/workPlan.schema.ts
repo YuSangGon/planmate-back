@@ -1,22 +1,60 @@
 import { z } from "zod";
 
-const planItemSchema = z.object({
-  time: z.string().max(50).optional().default(""),
-  title: z.string().min(1).max(120),
-  note: z.string().max(500).optional().default(""),
+const workPlanHotelOptionSchema = z.object({
+  name: z.string().max(200).default(""),
+  location: z.string().max(200).default(""),
+  priceRange: z.string().max(100).default(""),
+  bookingLink: z.string().max(500).optional().default(""),
+  summary: z.string().max(2000).default(""),
+  pros: z.array(z.string().max(100)).default([]),
+  cons: z.array(z.string().max(100)).default([]),
+  recommended: z.boolean().default(false),
 });
 
-const planDaySchema = z.object({
+const workPlanPreparationSchema = z.object({
+  visaInfo: z.string().max(2000).default(""),
+  documents: z.string().max(2000).default(""),
+  transportToAirport: z.string().max(2000).default(""),
+  simWifi: z.string().max(2000).default(""),
+  moneyTips: z.string().max(2000).default(""),
+  packingTips: z.string().max(2000).default(""),
+  otherTips: z.string().max(2000).default(""),
+});
+
+const workPlanScheduleItemSchema = z.object({
+  startTime: z.string().max(20).default(""),
+  endTime: z.string().max(20).default(""),
+  place: z.string().max(200).default(""),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).default(""),
+  fee: z.string().max(100).default(""),
+  estimatedCost: z.string().max(100).default(""),
+  transport: z.string().max(200).default(""),
+  durationNote: z.string().max(200).default(""),
+  tips: z.string().max(2000).default(""),
+});
+
+const workPlanDaySchema = z.object({
   title: z.string().min(1).max(120),
-  items: z.array(planItemSchema).min(1),
+  dateLabel: z.string().max(100).default(""),
+  summary: z.string().max(2000).default(""),
+  items: z.array(workPlanScheduleItemSchema).default([]),
+});
+
+const workPlanExtrasSchema = z.object({
+  localTransport: z.string().max(2000).default(""),
+  reservations: z.string().max(2000).default(""),
+  emergencyInfo: z.string().max(2000).default(""),
+  finalNotes: z.string().max(2000).default(""),
 });
 
 export const updateWorkPlanSchema = z.object({
-  title: z.string().min(1).max(120),
-  summary: z.string().min(1).max(2000),
-  duration: z.string().min(1).max(60),
-  tags: z.array(z.string()).default([]),
   content: z.object({
-    days: z.array(planDaySchema).min(1),
+    preparation: workPlanPreparationSchema,
+    hotels: z.array(workPlanHotelOptionSchema).default([]),
+    days: z.array(workPlanDaySchema).min(1),
+    extras: workPlanExtrasSchema,
   }),
 });
+
+export type UpdateWorkPlanBody = z.infer<typeof updateWorkPlanSchema>;

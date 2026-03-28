@@ -1,26 +1,120 @@
 import { prisma } from "../lib/prisma";
 import { buildFixedWorkPlanPreview } from "./workPlanPreview.util";
 
+type WorkPlanHotelOption = {
+  name: string;
+  location: string;
+  priceRange: string;
+  bookingLink?: string;
+  summary: string;
+  pros: string[];
+  cons: string[];
+  recommended: boolean;
+};
+
+type WorkPlanPreparation = {
+  visaInfo: string;
+  documents: string;
+  transportToAirport: string;
+  simWifi: string;
+  moneyTips: string;
+  packingTips: string;
+  otherTips: string;
+};
+
+type WorkPlanScheduleItem = {
+  startTime: string;
+  endTime: string;
+  place: string;
+  title: string;
+  description: string;
+  fee: string;
+  estimatedCost: string;
+  transport: string;
+  durationNote: string;
+  tips: string;
+};
+
+type WorkPlanDay = {
+  title: string;
+  dateLabel: string;
+  summary: string;
+  items: WorkPlanScheduleItem[];
+};
+
+type WorkPlanExtras = {
+  localTransport: string;
+  reservations: string;
+  emergencyInfo: string;
+  finalNotes: string;
+};
+
 type WorkPlanContent = {
-  days: Array<{
-    title: string;
-    items: Array<{
-      time?: string;
-      title: string;
-      note?: string;
-    }>;
-  }>;
+  preparation: WorkPlanPreparation;
+  hotels: WorkPlanHotelOption[];
+  days: WorkPlanDay[];
+  extras: WorkPlanExtras;
 };
 
 type UpdateWorkPlanInput = {
   requestId: string;
   plannerId: string;
-  title: string;
-  summary: string;
-  duration: string;
-  tags: string[];
   content: WorkPlanContent;
 };
+
+type PlanSection = "preparation" | "hotels" | "days" | "extras";
+
+function sortKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep);
+  }
+
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    return Object.keys(obj)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = sortKeysDeep(obj[key]);
+        return acc;
+      }, {});
+  }
+
+  return value;
+}
+
+function isEqualJson(a: unknown, b: unknown) {
+  return JSON.stringify(sortKeysDeep(a)) === JSON.stringify(sortKeysDeep(b));
+}
+
+function getChangedSections(
+  before: WorkPlanContent,
+  after: WorkPlanContent,
+): PlanSection[] {
+  const previous = before ?? {
+    overview: {},
+    preparation: {},
+    hotels: [],
+    days: [],
+    extras: {},
+  };
+
+  const changed: PlanSection[] = [];
+  if (!isEqualJson(previous.preparation ?? {}, after.preparation ?? {})) {
+    changed.push("preparation");
+  }
+  if (!isEqualJson(previous.hotels ?? [], after.hotels ?? [])) {
+    changed.push("hotels");
+  }
+  if (!isEqualJson(previous.days ?? [], after.days ?? [])) {
+    changed.push("days");
+  }
+  if (!isEqualJson(previous.extras ?? {}, after.extras ?? {})) {
+    changed.push("extras");
+  }
+
+  return changed;
+}
 
 export async function getOrCreateWorkPlan(input: {
   requestId: string;
@@ -58,15 +152,13 @@ export async function getOrCreateWorkPlan(input: {
       requestId: requestItem.id,
       plannerId: input.plannerId,
       travellerId: requestItem.travellerId,
-      title: `${requestItem.destination} plan`,
-      destination: requestItem.destination,
-      summary: "",
-      price: requestItem.offerCost,
-      duration: requestItem.duration,
       visibility: "private",
       status: "draft",
-      tags: [],
+      planType: "request",
       content: {
+        preparation: {
+          visaInfo: "",
+        },
         days: [
           {
             title: "Day 1",
@@ -117,17 +209,41 @@ export async function updateWorkPlan(input: UpdateWorkPlanInput) {
     throw new Error("Work plan not found");
   }
 
-  if (plan.status !== "draft") {
-    throw new Error("Only draft plans can be edited");
+  if (plan.status === "approved") {
+    throw new Error("Approved plans can't be edited");
   }
+  // else if (plan.status === "submitted") {
+  //   const beforeContent = (plan.content as WorkPlanContent) ?? null;
+  //   const afterContent = input.content;
+
+  //   const changedSections = getChangedSections(beforeContent, afterContent);
+  //   console.log("[changedSectionList] " + changedSections.join(", "));
+  //   if (changedSections.length) {
+  //     return prisma.$transaction(async (tx: any) => {
+  //       const updated = await tx.plan.update({
+  //         where: { id: plan.id },
+  //         data: {
+  //           content: afterContent,
+  //           lastEditedAt: new Date(),
+  //           lastEditedSection: changedSections.join(", "),
+  //         },
+  //       });
+
+  //       await tx.planChangeLog.create({
+  //         data: {
+  //           planId: plan.id,
+  //           section: changedSections.join(", "),
+  //         },
+  //       });
+
+  //       return updated;
+  //     });
+  //   }
+  // }
 
   return prisma.plan.update({
     where: { id: plan.id },
     data: {
-      title: input.title,
-      summary: input.summary,
-      duration: input.duration,
-      tags: input.tags,
       content: input.content,
     },
   });
@@ -216,7 +332,6 @@ export async function getTravellerPreviewPlan(input: {
           id: true,
           name: true,
           bio: true,
-          specialty: true,
         },
       },
     },
@@ -229,10 +344,6 @@ export async function getTravellerPreviewPlan(input: {
   return {
     id: plan.id,
     requestId: plan.requestId,
-    title: plan.title,
-    summary: plan.summary,
-    duration: plan.duration,
-    destination: plan.destination,
     status: plan.status,
     planner: plan.planner,
     previewContent: plan.previewContent,

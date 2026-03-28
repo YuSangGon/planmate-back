@@ -163,6 +163,7 @@ export async function completeRequest(input: {
       data: {
         status: "completed",
         coinTransferred: true,
+        completedAt: Date.now(),
       },
     });
   });

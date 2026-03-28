@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "ShopItemPrices" ADD COLUMN     "isSale" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "salePrice" DOUBLE PRECISION NOT NULL DEFAULT 0;

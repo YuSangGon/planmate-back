@@ -13,7 +13,6 @@ export async function getMyCoinBalance(userId: string) {
     select: {
       id: true,
       coinBalance: true,
-      role: true,
     },
   });
 
@@ -26,19 +25,28 @@ export async function getMyCoinBalance(userId: string) {
 
 export async function purchaseCoins(input: {
   userId: string;
-  packageId: string;
+  itemCode: string;
 }) {
-  const coinAmount = COIN_PACKAGES[input.packageId];
+  const shopItem = await prisma.shopItems.findUnique({
+    where: {
+      itemCode: input.itemCode,
+    },
+    select: {
+      id: true,
+      itemCode: true,
+      coins: true,
+    },
+  });
 
-  if (!coinAmount) {
-    throw new Error("Invalid coin package");
+  if (!shopItem) {
+    throw new Error("Invalid shop item");
   }
 
   return prisma.user.update({
     where: { id: input.userId },
     data: {
       coinBalance: {
-        increment: coinAmount,
+        increment: shopItem.coins,
       },
     },
     select: {
@@ -46,4 +54,46 @@ export async function purchaseCoins(input: {
       coinBalance: true,
     },
   });
+}
+
+export async function getItemLists() {
+  // TODO : 접속하는 나라에 따라 아이텀 코드 할당
+  const countryCode = "GBP";
+
+  const items = await prisma.shopItems.findMany({
+    include: {
+      prices: {
+        where: {
+          countryCode,
+        },
+        select: {
+          id: true,
+          countryCode: true,
+          price: true,
+          isSale: true,
+          salePrice: true,
+        },
+      },
+    },
+    orderBy: {
+      coins: "asc",
+    },
+  });
+
+  return items.map((item: any) => ({
+    id: item.id,
+    itemCode: item.itemCode,
+    itemName: item.itemName,
+    coins: item.coins,
+    mainDescription: item.mainDescription,
+    subDescription: item.subDescription,
+    priceInfo: item.prices[0]
+      ? {
+          price: item.prices[0].price,
+          countryCode: item.prices[0].countryCode,
+          isSale: item.prices[0].isSale,
+          salePrice: item.prices[0].salePrice,
+        }
+      : {},
+  }));
 }

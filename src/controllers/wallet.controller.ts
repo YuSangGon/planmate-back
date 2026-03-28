@@ -1,5 +1,10 @@
 import type { Request, Response } from "express";
-import { getMyCoinBalance, purchaseCoins } from "../services/wallet.service";
+import {
+  getMyCoinBalance,
+  purchaseCoins,
+  getItemLists,
+} from "../services/wallet.service";
+import { success } from "zod";
 
 export async function getWalletBalance(req: Request, res: Response) {
   const userId = req.auth?.sub;
@@ -41,7 +46,7 @@ export async function buyCoinPackage(req: Request, res: Response) {
   try {
     const data = await purchaseCoins({
       userId,
-      packageId: req.body.packageId,
+      itemCode: req.body.itemCode,
     });
 
     res.json({
@@ -53,6 +58,34 @@ export async function buyCoinPackage(req: Request, res: Response) {
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to purchase coins",
+    });
+  }
+}
+
+export async function getShopItems(req: Request, res: Response) {
+  const userId = req.auth?.sub;
+
+  if (!userId) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  const data = await getItemLists();
+
+  res.json({
+    success: true,
+    data: data,
+  });
+
+  try {
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to get item list",
     });
   }
 }

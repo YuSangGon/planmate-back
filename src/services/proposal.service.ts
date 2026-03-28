@@ -296,7 +296,6 @@ export async function acceptProposal(input: {
             name: true,
             email: true,
             bio: true,
-            role: true,
           },
         },
       },

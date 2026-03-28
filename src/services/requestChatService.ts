@@ -21,11 +21,9 @@ export async function getRequestChatContextOrThrow(
   const request = await prisma.request.findUnique({
     where: { id: requestId },
     include: {
-      traveller: {
-        select: { id: true, name: true, email: true, role: true },
-      },
+      traveller: {},
       planner: {
-        select: { id: true, name: true, email: true, role: true },
+        select: { id: true, name: true, email: true },
       },
       chatRoom: true,
     },
@@ -77,7 +75,6 @@ export async function getRequestMessagesService(
             select: {
               id: true,
               name: true,
-              role: true,
             },
           },
         },
@@ -137,7 +134,6 @@ export async function createRequestMessageService(
         select: {
           id: true,
           name: true,
-          role: true,
         },
       },
     },
@@ -182,14 +178,12 @@ export async function getMyChatRoomsService(userId: string) {
             select: {
               id: true,
               name: true,
-              role: true,
             },
           },
           planner: {
             select: {
               id: true,
               name: true,
-              role: true,
             },
           },
         },

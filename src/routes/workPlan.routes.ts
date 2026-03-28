@@ -12,16 +12,16 @@ import { updateWorkPlanSchema } from "../schemas/workPlan.schema";
 
 const router = Router();
 
-router.get("/:requestId/work-plan", requireAuth, getPlannerWorkPlan);
+router.get("/:requestId", requireAuth, getPlannerWorkPlan);
 
 router.patch(
-  "/:requestId/work-plan",
+  "/:requestId",
   requireAuth,
   validateBody(updateWorkPlanSchema),
   updatePlannerWorkPlan,
 );
 
-router.post("/:requestId/work-plan/submit", requireAuth, submitPlannerWorkPlan);
+router.post("/:requestId/submit", requireAuth, submitPlannerWorkPlan);
 
 router.get(
   "/:requestId/preview-plan",
