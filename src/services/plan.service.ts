@@ -37,6 +37,12 @@ export async function getPublicPlans() {
           name: true,
         },
       },
+      planReviewSummary: {
+        select: {
+          reviewCount: true,
+          rating: true,
+        },
+      },
     },
   });
 }

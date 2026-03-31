@@ -27,7 +27,7 @@ router.use("/dashboard", dashboardRoutes);
 router.use("/wallet", walletRoutes);
 router.use("/direct-proposals", plannerProposalRoutes);
 router.use("/work-plan", workPlanRoutes);
-router.use("/requests", requestChatRoutes);
+router.use("/chat", requestChatRoutes);
 router.use("/review", reviewRoutes);
 
 export default router;
