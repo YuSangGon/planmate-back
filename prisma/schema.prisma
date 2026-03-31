@@ -42,6 +42,11 @@ enum PlanStatus {
   approved
 }
 
+enum ReviewStatus {
+  draft
+  submitted
+}
+
 enum PlanType {
   request
   personal
@@ -285,8 +290,9 @@ model PlanReview {
   user         User     @relation("UserWrittenReviews", fields: [userId], references: [id], onDelete: Cascade)
   planId       String
   plan         Plan     @relation("PlanReceivedReviews", fields: [planId], references: [id], onDelete: Cascade)
+  status       ReviewStatus  @default(draft)
 
-  overallRating   Int
+  overallRating   Float
   planQuality     Int
   practicality    Int
   detailLevel     Int

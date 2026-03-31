@@ -1,3 +1,4 @@
+import { includes } from "zod";
 import { prisma } from "../lib/prisma";
 
 type CreatePlanInput = {
@@ -104,13 +105,28 @@ export async function getPublicPlanByIdWithReview(
   planId: string,
   userId: string,
 ) {
-  // TODO : 리뷰도 가져오기
-
   const isGotPlan = userId
     ? await prisma.gotPlans.findFirst({
         where: {
           planId,
           buyerId: userId,
+        },
+      })
+    : null;
+
+  const myReview = userId
+    ? await prisma.planReview.findFirst({
+        where: {
+          planId,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       })
     : null;
@@ -125,12 +141,25 @@ export async function getPublicPlanByIdWithReview(
           bio: true,
         },
       },
+      planReviewSummary: true,
+      planReviews: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
   return {
     isGotPlan: !isGotPlan ? false : true,
     data: planData,
+    myReview: myReview,
   };
 }
 

@@ -1,6 +1,13 @@
 import { prisma } from "../lib/prisma";
-import type { PlannerReview, PlannerReviewSummary } from "../types/review";
-import { refreshPlannerReviewSummary } from "./plannerReviewSummary.service";
+import type {
+  PlannerReview,
+  PlannerReviewSummary,
+  ReviewType,
+} from "../types/review";
+import {
+  refreshPlannerReviewSummary,
+  refreshPlanReviewSummary,
+} from "./plannerReviewSummary.service";
 
 function validateRating(value: number, fieldName: string) {
   if (!Number.isInteger(value) || value < 1 || value > 5) {
@@ -9,11 +16,16 @@ function validateRating(value: number, fieldName: string) {
 }
 
 function validateReview(input: PlannerReview) {
-  // validateRating(input.overallRating, "overallRating");
   validateRating(input.planQuality, "planQuality");
   validateRating(input.communication, "communication");
   validateRating(input.timeliness, "timeliness");
   validateRating(input.personalisation, "personalisation");
+  validateRating(input.practicality, "practicality");
+  validateRating(input.detailLevel, "detailLevel");
+}
+
+function validatePlanReview(input: ReviewType) {
+  validateRating(input.planQuality, "planQuality");
   validateRating(input.practicality, "practicality");
   validateRating(input.detailLevel, "detailLevel");
 }
@@ -79,6 +91,63 @@ export async function createReviewService(
   });
 
   refreshPlannerReviewSummary(request.plannerId);
+
+  return review;
+}
+
+export async function createPlanReviewService(
+  userId: string,
+  input: ReviewType,
+  planId: string,
+) {
+  validatePlanReview(input);
+
+  const existingPlan = await prisma.plan.findUnique({
+    where: { id: planId },
+  });
+
+  if (!existingPlan) {
+    throw new Error("Plan not found");
+  }
+
+  const purchased = await prisma.gotPlans.findFirst({
+    where: { planId: planId, buyerId: userId },
+  });
+
+  if (!purchased) {
+    throw new Error("Forbidden");
+  }
+
+  const existingReview = await prisma.planReview.findFirst({
+    where: { userId, planId: planId },
+  });
+
+  if (existingReview) {
+    throw new Error("Review already exists");
+  }
+
+  const review = await prisma.planReview.create({
+    data: {
+      userId,
+      planId: planId,
+      overallRating: input.overallRating,
+      planQuality: input.planQuality,
+      practicality: input.practicality,
+      detailLevel: input.detailLevel,
+      content: input.content.trim(),
+      status: "submitted",
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  refreshPlanReviewSummary(planId);
 
   return review;
 }

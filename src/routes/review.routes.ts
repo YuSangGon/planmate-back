@@ -4,8 +4,9 @@ import {
   createReviewService,
   editReviewService,
   getPlannerReviewForRequestService,
+  createPlanReviewService,
 } from "../services/review.service";
-import type { PlannerReview } from "../types/review";
+import type { PlannerReview, ReviewType } from "../types/review";
 
 const router = express.Router();
 
@@ -58,6 +59,35 @@ router.post("/planner", requireAuth, async (req, res) => {
             message === "Only travellers can write reviews"
           ? 403
           : message === "Request not found" || message === "Planner not found"
+            ? 404
+            : 400;
+
+    return res.status(status).json({ message });
+  }
+});
+
+router.post("/plan/:planId", requireAuth, async (req, res) => {
+  try {
+    if (!req.auth) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const input = req.body as ReviewType;
+    const planId = req.params.planId as string;
+    const data = await createPlanReviewService(req.auth.sub, input, planId);
+
+    return res.status(201).json({ data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to create review";
+
+    const status =
+      message === "Unauthorized"
+        ? 401
+        : message === "Forbidden" ||
+            message === "Only travellers can write reviews"
+          ? 403
+          : message === "Request not found" || message === "Plan not found"
             ? 404
             : 400;
 

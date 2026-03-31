@@ -58,6 +58,7 @@ export async function getPlanDetail(req: Request, res: Response) {
     success: true,
     isGotPlan: plan.isGotPlan,
     data: plan.data,
+    myReview: plan.myReview,
   });
 }
 

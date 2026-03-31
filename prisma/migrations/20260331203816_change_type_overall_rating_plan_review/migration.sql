@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "PlanReview" ALTER COLUMN "overallRating" SET DATA TYPE DOUBLE PRECISION;

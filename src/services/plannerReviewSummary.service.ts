@@ -100,3 +100,48 @@ export async function refreshPlannerReviewSummary(userId: string) {
 
   return summary;
 }
+
+export async function refreshPlanReviewSummary(planId: string) {
+  const aggregate = await prisma.planReview.aggregate({
+    where: {
+      planId: planId,
+    },
+    _count: {
+      id: true,
+    },
+    _avg: {
+      overallRating: true,
+      planQuality: true,
+      practicality: true,
+      detailLevel: true,
+    },
+  });
+
+  const reviewCount = aggregate._count.id ?? 0;
+
+  const rating = toFixedNumber(aggregate._avg.overallRating, 1);
+  const planQuality = toFixedNumber(aggregate._avg.planQuality, 1);
+  const practicality = toFixedNumber(aggregate._avg.practicality, 1);
+  const detailLevel = toFixedNumber(aggregate._avg.detailLevel, 1);
+
+  const summary = await prisma.planReviewSummary.upsert({
+    where: { planId },
+    update: {
+      reviewCount,
+      rating,
+      planQuality,
+      practicality,
+      detailLevel,
+    },
+    create: {
+      planId,
+      reviewCount,
+      rating,
+      planQuality,
+      practicality,
+      detailLevel,
+    },
+  });
+
+  return summary;
+}

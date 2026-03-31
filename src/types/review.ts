@@ -20,3 +20,15 @@ export type PlannerReviewSummary = {
   practicalityAvg: number;
   detailLevelAvg: number;
 };
+
+export type ReviewType = {
+  id: string;
+  overallRating: number;
+  planQuality: number;
+  practicality: number;
+  detailLevel: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  status: "draft" | "submitted";
+};
