@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { $ZodCheck } from "zod/v4/core";
 
 const workPlanHotelOptionSchema = z.object({
   name: z.string().max(200).default(""),
@@ -48,7 +49,18 @@ const workPlanExtrasSchema = z.object({
   finalNotes: z.string().max(2000).default(""),
 });
 
+export const createPlanSchema = z.object({
+  title: z.string().max(2000).default(""),
+  destination: z.string().max(2000).default(""),
+  summary: z.string().max(2000).default(""),
+  price: z.float64().default(0),
+  duration: z.string().max(2000).default(""),
+  visibility: z.string().default("private"),
+  tags: z.array(z.string()).default([]),
+});
+
 export const updateWorkPlanSchema = z.object({
+  planInfo: createPlanSchema,
   content: z.object({
     preparation: workPlanPreparationSchema,
     hotels: z.array(workPlanHotelOptionSchema).default([]),

@@ -5,14 +5,23 @@ import {
   getTravellerPreviewPlanController,
   submitPlannerWorkPlan,
   updatePlannerWorkPlan,
+  createPlan,
+  getPlanInfo,
+  editWorkPlan,
+  completeWorkPlan,
 } from "../controllers/workPlan.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
 import { validateBody } from "../middlewares/validate.middleware";
-import { updateWorkPlanSchema } from "../schemas/workPlan.schema";
+import {
+  createPlanSchema,
+  updateWorkPlanSchema,
+} from "../schemas/workPlan.schema";
 
 const router = Router();
 
 router.get("/:requestId", requireAuth, getPlannerWorkPlan);
+router.post("/create", requireAuth, validateBody(createPlanSchema), createPlan);
+router.get("/create/:planId", requireAuth, getPlanInfo);
 
 router.patch(
   "/:requestId",
@@ -21,7 +30,15 @@ router.patch(
   updatePlannerWorkPlan,
 );
 
+router.patch(
+  "/edit/:planId",
+  requireAuth,
+  validateBody(updateWorkPlanSchema),
+  editWorkPlan,
+);
+
 router.post("/:requestId/submit", requireAuth, submitPlannerWorkPlan);
+router.post("/complete/:planId", requireAuth, completeWorkPlan);
 
 router.get(
   "/:requestId/preview-plan",

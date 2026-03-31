@@ -62,6 +62,13 @@ type UpdateWorkPlanInput = {
   content: WorkPlanContent;
 };
 
+type EditWorkPlanInput = {
+  planId: string;
+  plannerId: string;
+  planInfo: PlanInfo;
+  content: WorkPlanContent;
+};
+
 type PlanSection = "preparation" | "hotels" | "days" | "extras";
 
 function sortKeysDeep(value: unknown): unknown {
@@ -185,6 +192,87 @@ export async function getOrCreateWorkPlan(input: {
   return createdPlan;
 }
 
+export type PlanInfo = {
+  title: string;
+  destination: string;
+  summary: string;
+  price: string;
+  duration: string;
+  visibility: "public" | "private";
+  tags: string[];
+};
+
+export async function createWorkPlan(input: {
+  plannerId: string;
+  data: PlanInfo;
+}) {
+  const planner = await prisma.user.findFirst({
+    where: {
+      id: input.plannerId,
+    },
+  });
+
+  if (!planner) {
+    throw new Error("Forbidden");
+  }
+
+  const createdPlan = await prisma.plan.create({
+    data: {
+      plannerId: input.plannerId,
+      title: input.data.title,
+      destination: input.data.destination,
+      summary: input.data.summary,
+      price: input.data.price,
+      duration: input.data.duration,
+      visibility: input.data.visibility,
+      tags: input.data.tags,
+      status: "draft",
+      planType: "personal",
+      content: {
+        preparation: {
+          visaInfo: "",
+        },
+        days: [
+          {
+            title: "Day 1",
+            items: [
+              {
+                time: "",
+                title: "Add your first activity",
+                note: "",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  return createdPlan;
+}
+
+export async function getWorkPlanInfo(planId: string) {
+  const plan = await prisma.plan.findUnique({
+    where: { id: planId },
+    select: {
+      id: true,
+      title: true,
+      destination: true,
+      summary: true,
+      price: true,
+      duration: true,
+      visibility: true,
+      tags: true,
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Plan not found");
+  }
+
+  return plan;
+}
+
 export async function updateWorkPlan(input: UpdateWorkPlanInput) {
   const requestItem = await prisma.request.findUnique({
     where: { id: input.requestId },
@@ -212,38 +300,38 @@ export async function updateWorkPlan(input: UpdateWorkPlanInput) {
   if (plan.status === "approved") {
     throw new Error("Approved plans can't be edited");
   }
-  // else if (plan.status === "submitted") {
-  //   const beforeContent = (plan.content as WorkPlanContent) ?? null;
-  //   const afterContent = input.content;
-
-  //   const changedSections = getChangedSections(beforeContent, afterContent);
-  //   console.log("[changedSectionList] " + changedSections.join(", "));
-  //   if (changedSections.length) {
-  //     return prisma.$transaction(async (tx: any) => {
-  //       const updated = await tx.plan.update({
-  //         where: { id: plan.id },
-  //         data: {
-  //           content: afterContent,
-  //           lastEditedAt: new Date(),
-  //           lastEditedSection: changedSections.join(", "),
-  //         },
-  //       });
-
-  //       await tx.planChangeLog.create({
-  //         data: {
-  //           planId: plan.id,
-  //           section: changedSections.join(", "),
-  //         },
-  //       });
-
-  //       return updated;
-  //     });
-  //   }
-  // }
 
   return prisma.plan.update({
     where: { id: plan.id },
     data: {
+      content: input.content,
+    },
+  });
+}
+
+export async function editWorkPlanService(input: EditWorkPlanInput) {
+  const planItem = await prisma.plan.findUnique({
+    where: { id: input.planId },
+  });
+
+  if (!planItem) {
+    throw new Error("Plan not found");
+  }
+
+  if (planItem.plannerId !== input.plannerId) {
+    throw new Error("Forbidden");
+  }
+
+  return prisma.plan.update({
+    where: { id: planItem.id },
+    data: {
+      title: input.planInfo.title,
+      destination: input.planInfo.destination,
+      summary: input.planInfo.summary,
+      price: input.planInfo.price,
+      duration: input.planInfo.duration,
+      visibility: input.planInfo.visibility,
+      tags: input.planInfo.tags,
       content: input.content,
     },
   });
@@ -300,6 +388,34 @@ export async function submitWorkPlan(input: {
 
     return updatedPlan;
   });
+}
+
+export async function completeWorkPlanService(input: {
+  planId: string;
+  plannerId: string;
+}) {
+  const planItem = await prisma.plan.findUnique({
+    where: { id: input.planId },
+  });
+
+  if (!planItem) {
+    throw new Error("Plan not found");
+  }
+
+  if (planItem.plannerId !== input.plannerId) {
+    throw new Error("Forbidden");
+  }
+
+  const previewContent = buildFixedWorkPlanPreview(planItem.content as any, 3);
+
+  const updatedPlan = await prisma.plan.update({
+    where: { id: planItem.id },
+    data: {
+      status: "completed",
+      previewContent,
+    },
+  });
+  return updatedPlan;
 }
 
 export async function getTravellerPreviewPlan(input: {

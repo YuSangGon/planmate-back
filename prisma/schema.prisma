@@ -38,6 +38,7 @@ enum DirectProposalStatus {
 enum PlanStatus {
   draft
   submitted
+  completed
   approved
 }
 
@@ -210,7 +211,7 @@ model Plan {
   title          String?
   destination    String?
   summary        String?
-  price          Int?
+  price          Float?
   duration       String?
   visibility     PlanVisibility @default(private)
   status         PlanStatus     @default(draft)
