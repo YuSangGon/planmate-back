@@ -30,13 +30,7 @@ type WorkPlanDay = {
 };
 
 type WorkPlanContent = {
-  overview?: {
-    destinationSummary?: string;
-    recommendedBudget?: string;
-    bestFor?: string;
-    notes?: string;
-  };
-  preparation?: {
+  preparation: {
     visaInfo?: string;
     documents?: string;
     transportToAirport?: string;
@@ -45,9 +39,9 @@ type WorkPlanContent = {
     packingTips?: string;
     otherTips?: string;
   };
-  hotels?: WorkPlanHotelOption[];
-  days?: WorkPlanDay[];
-  extras?: {
+  hotels: WorkPlanHotelOption[];
+  days: WorkPlanDay[];
+  extras: {
     localTransport?: string;
     reservations?: string;
     emergencyInfo?: string;
@@ -70,103 +64,221 @@ type PreviewScheduleSample = {
 };
 
 export type WorkPlanPreviewContent = {
-  overview: {
-    destinationSummary: string;
-  } | null;
   preparation: {
-    visaInfo: string;
-    transportToAirport: string;
-  } | null;
-  recommendedHotel: {
-    name: string;
-    location: string;
-    priceRange: string;
-    summary: string;
-    pros: string[];
-    cons: string[];
-  } | null;
-  randomSamples: PreviewScheduleSample[];
+    visaInfo?: string;
+    documents?: string;
+    transportToAirport?: string;
+    simWifi?: string;
+    moneyTips?: string;
+    packingTips?: string;
+    otherTips?: string;
+  };
+  hotels: WorkPlanHotelOption[];
+  days: WorkPlanDay[];
+  extras: {
+    localTransport?: string;
+    reservations?: string;
+    emergencyInfo?: string;
+    finalNotes?: string;
+  };
 };
 
-function shuffleArray<T>(items: T[]) {
-  const next = [...items];
+export function pickRandomFields<T extends Record<string, any>>(
+  obj: T,
+  count: number,
+): Partial<T> {
+  const keys = Object.keys(obj) as (keyof T)[];
 
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j], next[i]];
+  if (count > keys.length) {
+    throw new Error("count cannot be greater than number of keys");
   }
 
-  return next;
+  // Fisher–Yates shuffle
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+
+  const selectedKeys = keys.slice(0, count);
+  const result: Partial<T> = {};
+
+  selectedKeys.forEach((key) => {
+    result[key] = obj[key];
+  });
+
+  return result;
+}
+
+export function getRandomIndices(arrayLength: number, count: number): number[] {
+  if (count > arrayLength) {
+    throw new Error("count cannot be greater than array length");
+  }
+
+  const indices = Array.from({ length: arrayLength }, (_, i) => i);
+
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  return indices.slice(0, count);
+}
+
+export function createPreviewHotels(
+  hotels: WorkPlanHotelOption[],
+  visibleIndices: number[],
+): WorkPlanHotelOption[] {
+  const visibleSet = new Set(visibleIndices);
+
+  return hotels.map((hotel, index) => {
+    if (visibleSet.has(index)) {
+      const selectedHotelFields = pickRandomFields(hotel, 5);
+      return {
+        name: "",
+        location: "",
+        priceRange: "",
+        bookingLink: "",
+        summary: "",
+        pros: [],
+        cons: [],
+        recommended: false,
+        ...selectedHotelFields,
+      };
+    }
+
+    return {
+      name: "",
+      location: "",
+      priceRange: "",
+      bookingLink: "",
+      summary: "",
+      pros: [],
+      cons: [],
+      recommended: false,
+    };
+  });
+}
+
+export function createPreviewDays(
+  days: WorkPlanDay[],
+  visibleIndices: number[],
+  itemCount = 2,
+): WorkPlanDay[] {
+  const visibleSet = new Set(visibleIndices);
+
+  return days.map((day, index) => {
+    // 선택된 day
+    if (visibleSet.has(index)) {
+      const itemIndices = getRandomIndices(
+        day.items.length,
+        Math.min(itemCount, day.items.length),
+      );
+
+      const visibleItemSet = new Set(itemIndices);
+
+      const previewItems = day.items.map((item, itemIndex) => {
+        if (visibleItemSet.has(itemIndex)) {
+          return item;
+        }
+
+        return {
+          startTime: "",
+          endTime: "",
+          place: "",
+          title: "",
+          description: "",
+          fee: "",
+          estimatedCost: "",
+          transport: "",
+          durationNote: "",
+          tips: "",
+        };
+      });
+
+      return {
+        title: day.title,
+        dateLabel: day.dateLabel,
+        summary: day.summary,
+        items: previewItems,
+      };
+    }
+
+    const dummyItem = {
+      startTime: "",
+      endTime: "",
+      place: "",
+      title: "",
+      description: "",
+      fee: "",
+      estimatedCost: "",
+      transport: "",
+      durationNote: "",
+      tips: "",
+    };
+
+    const itemsToRender = Array.from(
+      { length: day.items.length },
+      () => dummyItem,
+    );
+
+    return {
+      title: day.title,
+      dateLabel: day.dateLabel,
+      summary: "",
+      items: itemsToRender,
+    };
+  });
 }
 
 export function buildFixedWorkPlanPreview(
   content: WorkPlanContent | null | undefined,
-  sampleCount = 3,
 ): WorkPlanPreviewContent {
   if (!content) {
     return {
-      overview: null,
-      preparation: null,
-      recommendedHotel: null,
-      randomSamples: [],
+      preparation: {
+        visaInfo: "",
+        documents: "",
+        transportToAirport: "",
+        simWifi: "",
+        moneyTips: "",
+        packingTips: "",
+        otherTips: "",
+      },
+      hotels: [],
+      days: [],
+      extras: {
+        localTransport: "",
+        reservations: "",
+        emergencyInfo: "",
+        finalNotes: "",
+      },
     };
   }
 
-  const flattenedSamples: PreviewScheduleSample[] = (
-    content.days ?? []
-  ).flatMap((day) =>
-    (day.items ?? []).map((item) => ({
-      dayTitle: day.title ?? "",
-      dateLabel: day.dateLabel ?? "",
-      startTime: item.startTime ?? "",
-      endTime: item.endTime ?? "",
-      place: item.place ?? "",
-      title: item.title ?? "",
-      description: item.description ?? "",
-      fee: item.fee ?? "",
-      estimatedCost: item.estimatedCost ?? "",
-      transport: item.transport ?? "",
-      tips: item.tips ?? "",
-    })),
-  );
-
-  const validSamples = flattenedSamples.filter(
-    (item) => item.title.trim() || item.place.trim() || item.description.trim(),
-  );
-
-  const randomSamples = shuffleArray(validSamples).slice(0, sampleCount);
-
-  const recommendedHotel =
-    (content.hotels ?? []).find((hotel) => hotel.recommended) ??
-    (content.hotels ?? [])[0] ??
-    null;
+  const selectedPreparation = pickRandomFields(content.preparation, 3);
+  const previewHotelList = getRandomIndices(content.hotels.length, 1);
+  const previewExtras = pickRandomFields(content.extras, 1);
+  const previewDayList = getRandomIndices(content.days.length, 1);
 
   return {
-    overview: content.overview?.destinationSummary
-      ? {
-          destinationSummary: content.overview.destinationSummary,
-        }
-      : null,
-
-    preparation:
-      content.preparation?.visaInfo || content.preparation?.transportToAirport
-        ? {
-            visaInfo: content.preparation?.visaInfo ?? "",
-            transportToAirport: content.preparation?.transportToAirport ?? "",
-          }
-        : null,
-
-    recommendedHotel: recommendedHotel
-      ? {
-          name: recommendedHotel.name,
-          location: recommendedHotel.location,
-          priceRange: recommendedHotel.priceRange,
-          summary: recommendedHotel.summary,
-          pros: recommendedHotel.pros ?? [],
-          cons: recommendedHotel.cons ?? [],
-        }
-      : null,
-
-    randomSamples,
+    preparation: {
+      visaInfo: "",
+      documents: "",
+      transportToAirport: "",
+      simWifi: "",
+      moneyTips: "",
+      packingTips: "",
+      otherTips: "",
+      ...selectedPreparation,
+    },
+    hotels: createPreviewHotels(content.hotels, previewHotelList),
+    days: createPreviewDays(content.days, previewDayList, 2),
+    extras: {
+      localTransport: "",
+      reservations: "",
+      emergencyInfo: "",
+      finalNotes: "",
+      ...previewExtras,
+    },
   };
 }

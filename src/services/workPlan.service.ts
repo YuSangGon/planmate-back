@@ -368,7 +368,7 @@ export async function submitWorkPlan(input: {
   //   throw new Error("Only draft plans can be submitted");
   // }
 
-  const previewContent = buildFixedWorkPlanPreview(plan.content as any, 3);
+  const previewContent = buildFixedWorkPlanPreview(plan.content as any);
 
   return prisma.$transaction(async (tx: any) => {
     const updatedPlan = await tx.plan.update({
@@ -406,7 +406,7 @@ export async function completeWorkPlanService(input: {
     throw new Error("Forbidden");
   }
 
-  const previewContent = buildFixedWorkPlanPreview(planItem.content as any, 3);
+  const previewContent = buildFixedWorkPlanPreview(planItem.content as any);
 
   const updatedPlan = await prisma.plan.update({
     where: { id: planItem.id },
@@ -463,6 +463,57 @@ export async function getTravellerPreviewPlan(input: {
     status: plan.status,
     planner: plan.planner,
     previewContent: plan.previewContent,
+  };
+}
+
+export async function getPreviewPlan(planId: string) {
+  const plan = await prisma.plan.findFirst({
+    where: {
+      id: planId,
+      status: {
+        in: ["completed"],
+      },
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Completed plan not found");
+  }
+
+  return {
+    id: plan.id,
+    previewContent: plan.previewContent,
+  };
+}
+
+export async function getPlan(planId: string, userId: string) {
+  const history = await prisma.gotPlans.findFirst({
+    where: {
+      buyerId: userId,
+      planId: planId,
+    },
+  });
+
+  if (!history) {
+    throw new Error("Forbidden");
+  }
+
+  const plan = await prisma.plan.findFirst({
+    where: {
+      id: planId,
+      status: {
+        in: ["completed"],
+      },
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Completed plan not found");
+  }
+
+  return {
+    id: plan.id,
+    content: plan.content,
   };
 }
 

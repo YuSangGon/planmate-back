@@ -7,6 +7,8 @@ import {
   getPublicPlans,
   updatePlan,
   getPlanByIdWithReview,
+  getPublicPlanByIdWithReview,
+  purchasePlanService,
 } from "../services/plan.service";
 
 export async function getPlans(_req: Request, res: Response) {
@@ -38,9 +40,13 @@ export async function getMyPlans(req: Request, res: Response) {
 }
 
 export async function getPlanDetail(req: Request, res: Response) {
-  const plan = await getPlanByIdWithReview(req.params.planId as string);
+  const userId = req.auth?.sub as string;
+  const plan = await getPublicPlanByIdWithReview(
+    req.params.planId as string,
+    userId,
+  );
 
-  if (!plan) {
+  if (!plan.data) {
     res.status(404).json({
       success: false,
       message: "Plan not found",
@@ -50,7 +56,8 @@ export async function getPlanDetail(req: Request, res: Response) {
 
   res.json({
     success: true,
-    data: plan,
+    isGotPlan: plan.isGotPlan,
+    data: plan.data,
   });
 }
 
@@ -69,6 +76,29 @@ export async function createPlannerPlan(req: Request, res: Response) {
     plannerId,
     ...req.body,
   });
+
+  res.status(201).json({
+    success: true,
+    data: plan,
+  });
+}
+
+export async function purchasePlan(req: Request, res: Response) {
+  const userId = req.auth?.sub;
+
+  if (!userId) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  const plan = await purchasePlanService(
+    req.body.planId as string,
+    userId,
+    req.body.salePrice as number,
+  );
 
   res.status(201).json({
     success: true,

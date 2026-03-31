@@ -79,7 +79,6 @@ export async function getPlanById(planId: string) {
 }
 
 export async function getPlanByIdWithReview(planId: string) {
-  // TODO : 리뷰도 가져오기
   return prisma.plan.findUnique({
     where: { id: planId },
     include: {
@@ -101,6 +100,40 @@ export async function getPlanByIdWithReview(planId: string) {
   });
 }
 
+export async function getPublicPlanByIdWithReview(
+  planId: string,
+  userId: string,
+) {
+  // TODO : 리뷰도 가져오기
+
+  const isGotPlan = userId
+    ? await prisma.gotPlans.findFirst({
+        where: {
+          planId,
+          buyerId: userId,
+        },
+      })
+    : null;
+
+  const planData = await prisma.plan.findUnique({
+    where: { id: planId },
+    include: {
+      planner: {
+        select: {
+          id: true,
+          name: true,
+          bio: true,
+        },
+      },
+    },
+  });
+
+  return {
+    isGotPlan: !isGotPlan ? false : true,
+    data: planData,
+  };
+}
+
 export async function createPlan(input: CreatePlanInput) {
   return prisma.plan.create({
     data: {
@@ -114,6 +147,67 @@ export async function createPlan(input: CreatePlanInput) {
       duration: input.duration,
       visibility: input.visibility,
       tags: input.tags,
+    },
+  });
+}
+
+export async function purchasePlanService(
+  planId: string,
+  userId: string,
+  salePrice: number,
+) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new Error("Forbidden");
+  }
+
+  const plan = await prisma.plan.findUnique({
+    where: {
+      id: planId,
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Plan not found");
+  }
+
+  if (plan.salePrice !== salePrice) {
+    throw new Error("The price has been changed.");
+  }
+
+  if (user.coinBalance < salePrice) {
+    throw new Error("Coin balance is not enough to purchase");
+  }
+
+  const buyHistory = await prisma.gotPlans.findFirst({
+    where: {
+      buyerId: userId,
+      planId: planId,
+    },
+  });
+
+  if (!!buyHistory) {
+    throw new Error("Already purchased.");
+  }
+
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      coinBalance: user.coinBalance - salePrice,
+    },
+  });
+
+  return prisma.gotPlans.create({
+    data: {
+      buyerId: userId,
+      planId: planId,
     },
   });
 }

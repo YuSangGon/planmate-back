@@ -10,6 +10,8 @@ import {
   getWorkPlanInfo,
   editWorkPlanService,
   completeWorkPlanService,
+  getPreviewPlan,
+  getPlan,
 } from "../services/workPlan.service";
 
 export async function getPlannerWorkPlan(req: Request, res: Response) {
@@ -204,6 +206,43 @@ export async function getTravellerPreviewPlanController(
       requestId: req.params.requestId as string,
       travellerId,
     });
+
+    res.json({ success: true, data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load preview plan";
+
+    res.status(message === "Forbidden" ? 403 : 400).json({
+      success: false,
+      message,
+    });
+  }
+}
+
+export async function getPreviewPlanController(req: Request, res: Response) {
+  const planId = req.params.planId as string;
+
+  try {
+    const data = await getPreviewPlan(planId);
+
+    res.json({ success: true, data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load preview plan";
+
+    res.status(message === "Forbidden" ? 403 : 400).json({
+      success: false,
+      message,
+    });
+  }
+}
+
+export async function getPlanController(req: Request, res: Response) {
+  const planId = req.params.planId as string;
+  const userId = req.auth?.sub as string;
+
+  try {
+    const data = await getPlan(planId, userId);
 
     res.json({ success: true, data });
   } catch (error) {

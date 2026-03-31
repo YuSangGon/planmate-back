@@ -9,6 +9,8 @@ import {
   getPlanInfo,
   editWorkPlan,
   completeWorkPlan,
+  getPreviewPlanController,
+  getPlanController,
 } from "../controllers/workPlan.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
 import { validateBody } from "../middlewares/validate.middleware";
@@ -45,6 +47,9 @@ router.get(
   requireAuth,
   getTravellerPreviewPlanController,
 );
+
+router.get("/preview-plan/:planId", getPreviewPlanController);
+router.get("/detail/:planId", requireAuth, getPlanController);
 
 router.post(
   "/:requestId/preview-plan/approve",

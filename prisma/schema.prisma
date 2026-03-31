@@ -85,6 +85,7 @@ model User {
 
   sentRequestMessages   ChatMessages[] @relation("RequestMessageSender")
   plannerReviewSummary     PlannerReviewSummary?
+  gotPlanList           GotPlans[]
 }
 
 model ReportTraveller {
@@ -202,6 +203,16 @@ model Request {
   @@index([status])
 }
 
+model GotPlans {
+  id             String         @id @default(cuid())
+  buyerId        String
+  planId         String
+  createdAt        DateTime      @default(now())
+
+  buyer   User   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
 model Plan {
   id             String         @id @default(cuid())
   planType       PlanType       @default(personal)
@@ -212,6 +223,7 @@ model Plan {
   destination    String?
   summary        String?
   price          Float?
+  salePrice      Int            @default(0)         
   duration       String?
   visibility     PlanVisibility @default(private)
   status         PlanStatus     @default(draft)
@@ -229,6 +241,7 @@ model Plan {
   request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
   planner   User     @relation("PlannerPlans", fields: [plannerId], references: [id], onDelete: Cascade)
   traveller User?    @relation("TravellerPlans", fields: [travellerId], references: [id], onDelete: SetNull)
+  planBuyer GotPlans[]
 
   planReviewSummary  PlanReviewSummary?
   planReviews        PlanReview[] @relation("PlanReceivedReviews")

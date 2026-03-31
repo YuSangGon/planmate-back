@@ -6,6 +6,7 @@ import {
   getPlanDetail,
   getPlans,
   updatePlannerPlan,
+  purchasePlan,
 } from "../controllers/plan.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
 import { validateBody } from "../middlewares/validate.middleware";
@@ -15,7 +16,7 @@ const router = Router();
 
 router.get("/", getPlans);
 router.get("/me", requireAuth, getMyPlans);
-router.get("/:planId", getPlanDetail);
+router.get("/:planId", requireAuth, getPlanDetail);
 
 router.post(
   "/",
@@ -23,6 +24,8 @@ router.post(
   validateBody(createPlanSchema),
   createPlannerPlan,
 );
+
+router.post("/purchase", requireAuth, purchasePlan);
 
 router.patch(
   "/:planId",
