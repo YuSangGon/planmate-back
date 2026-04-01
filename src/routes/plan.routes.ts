@@ -7,6 +7,7 @@ import {
   getPlans,
   updatePlannerPlan,
   purchasePlan,
+  getPlansTop3,
 } from "../controllers/plan.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
 import { validateBody } from "../middlewares/validate.middleware";
@@ -15,6 +16,7 @@ import { createPlanSchema } from "../schemas/plan.schema";
 const router = Router();
 
 router.get("/", getPlans);
+router.get("/top3", getPlansTop3);
 router.get("/me", requireAuth, getMyPlans);
 router.get("/:planId", requireAuth, getPlanDetail);
 

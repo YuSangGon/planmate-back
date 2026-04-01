@@ -50,6 +50,71 @@ export async function getPlanners() {
   }));
 }
 
+export async function getPlannersTop3() {
+  const planners = await prisma.user.findMany({
+    take: 3,
+    select: {
+      id: true,
+      name: true,
+      bio: true,
+      createdAt: true, // 👈 필요
+      _count: {
+        select: {
+          plannerPlans: true,
+        },
+      },
+      plannerReviewSummary: {
+        select: {
+          reviewCount: true,
+          rating: true,
+          planQuality: true,
+          communication: true,
+          timeliness: true,
+          personalisation: true,
+          practicality: true,
+          detailLevel: true,
+          strengths: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        plannerReviewSummary: {
+          rating: "desc",
+        },
+      },
+      {
+        plannerReviewSummary: {
+          reviewCount: "desc",
+        },
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+  });
+
+  return planners.map((planner: any) => ({
+    id: planner.id,
+    name: planner.name,
+    description:
+      planner.bio || "Enjoys creating thoughtful and practical travel plans.",
+    completedPlans: planner._count.plannerPlans,
+
+    plannerReviewSummary: {
+      reviewCount: planner.plannerReviewSummary?.reviewCount ?? 0,
+      rating: planner.plannerReviewSummary?.rating ?? 0,
+      planQuality: planner.plannerReviewSummary?.planQuality ?? 0,
+      communication: planner.plannerReviewSummary?.communication ?? 0,
+      timeliness: planner.plannerReviewSummary?.timeliness ?? 0,
+      personalisation: planner.plannerReviewSummary?.personalisation ?? 0,
+      practicality: planner.plannerReviewSummary?.practicality ?? 0,
+      detailLevel: planner.plannerReviewSummary?.detailLevel ?? 0,
+      strengths: planner.plannerReviewSummary?.strengths ?? "",
+    },
+  }));
+}
+
 export async function getPlannerById(plannerId: string) {
   const planner = await prisma.user.findFirst({
     where: {

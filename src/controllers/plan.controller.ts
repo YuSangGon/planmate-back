@@ -9,10 +9,21 @@ import {
   getPlanByIdWithReview,
   getPublicPlanByIdWithReview,
   purchasePlanService,
+  getPublicPlansTop3,
 } from "../services/plan.service";
 
 export async function getPlans(_req: Request, res: Response) {
   const data = await getPublicPlans();
+
+  res.json({
+    success: true,
+    data,
+  });
+}
+
+export async function getPlansTop3(_req: Request, res: Response) {
+  console.log("???");
+  const data = await getPublicPlansTop3();
 
   res.json({
     success: true,

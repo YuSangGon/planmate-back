@@ -62,6 +62,44 @@ export async function signupUser(input: SignupInput) {
   };
 }
 
+export async function changePasswordService(
+  userId: string,
+  newPassword: string,
+  originalPassword: string,
+) {
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!existingUser) {
+    throw new Error("Not found user");
+  }
+
+  console.log(originalPassword);
+
+  const isValidPassword = await bcrypt.compare(
+    originalPassword,
+    existingUser.passwordHash,
+  );
+
+  if (!isValidPassword) {
+    throw new Error("Invalid credentials");
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  const user = await prisma.user.update({
+    where: { id: existingUser.id },
+    data: {
+      passwordHash,
+    },
+  });
+
+  return {
+    user: sanitizeUser(user),
+  };
+}
+
 export async function loginUser(input: LoginInput) {
   const user = await prisma.user.findUnique({
     where: { email: input.email },

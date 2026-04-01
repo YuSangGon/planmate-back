@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getPlannerDetail,
   getPlannerList,
+  getPlannerTop3,
 } from "../controllers/planner.controller";
 import { createPlannerDirectProposal } from "../controllers/directProposal.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
@@ -11,6 +12,7 @@ import { createDirectProposalSchema } from "../schemas/directProposal.schema";
 const router = Router();
 
 router.get("/", getPlannerList);
+router.get("/top3", getPlannerTop3);
 router.get("/:plannerId", getPlannerDetail);
 
 router.post(

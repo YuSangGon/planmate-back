@@ -47,6 +47,44 @@ export async function getPublicPlans() {
   });
 }
 
+export async function getPublicPlansTop3() {
+  return prisma.plan.findMany({
+    where: {
+      visibility: "public",
+    },
+    take: 3,
+    orderBy: [
+      {
+        planReviewSummary: {
+          rating: "desc",
+        },
+      },
+      {
+        planReviewSummary: {
+          reviewCount: "desc",
+        },
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+    include: {
+      planner: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      planReviewSummary: {
+        select: {
+          reviewCount: true,
+          rating: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getPlansForPlanner(plannerId: string) {
   return prisma.plan.findMany({
     where: { plannerId, requestId: null },

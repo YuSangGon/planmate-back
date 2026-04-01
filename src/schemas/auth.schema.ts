@@ -6,6 +6,11 @@ export const signupSchema = z.object({
   password: z.string().min(6),
 });
 
+export const passwordSchema = z.object({
+  originalPassword: z.string(),
+  newPassword: z.string().min(6),
+});
+
 export const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(1),
