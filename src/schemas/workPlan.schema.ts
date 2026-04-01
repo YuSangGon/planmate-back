@@ -60,7 +60,7 @@ export const createPlanSchema = z.object({
 });
 
 export const updateWorkPlanSchema = z.object({
-  planInfo: createPlanSchema,
+  // planInfo: createPlanSchema,
   content: z.object({
     preparation: workPlanPreparationSchema,
     hotels: z.array(workPlanHotelOptionSchema).default([]),

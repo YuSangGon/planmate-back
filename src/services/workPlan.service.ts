@@ -486,6 +486,25 @@ export async function getPreviewPlan(planId: string) {
   };
 }
 
+export async function getPreviewRequestPlan(requestId: string, userId: string) {
+  const plan = await prisma.plan.findFirst({
+    where: {
+      requestId: requestId,
+      travellerId: userId,
+      status: "submitted",
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Plan not found");
+  }
+
+  return {
+    id: plan.id,
+    previewContent: plan.previewContent,
+  };
+}
+
 export async function getPlan(planId: string, userId: string) {
   const history = await prisma.gotPlans.findFirst({
     where: {
@@ -509,6 +528,25 @@ export async function getPlan(planId: string, userId: string) {
 
   if (!plan) {
     throw new Error("Completed plan not found");
+  }
+
+  return {
+    id: plan.id,
+    content: plan.content,
+  };
+}
+
+export async function getRequestPlan(requestId: string, userId: string) {
+  const plan = await prisma.plan.findFirst({
+    where: {
+      requestId: requestId,
+      travellerId: userId,
+      status: "completed",
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Plan not found");
   }
 
   return {

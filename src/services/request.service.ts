@@ -140,9 +140,21 @@ export async function completeRequest(input: {
     throw new Error("This request does not have a matched planner yet");
   }
 
-  if (requestItem.coinTransferred) {
-    throw new Error("Coins were already transferred for this request");
+  const plan = await prisma.plan.findFirst({
+    where: {
+      requestId: requestItem.requestId,
+      travellerId: requestItem.travellerId,
+      status: "submitted",
+    },
+  });
+
+  if (!plan) {
+    throw new Error("Plan not found");
   }
+
+  // if (requestItem.coinTransferred) {
+  //   throw new Error("Coins were already transferred for this request");
+  // }
 
   if (!["matched", "in_progress", "submitted"].includes(requestItem.status)) {
     throw new Error("This request cannot be completed yet");
@@ -158,12 +170,21 @@ export async function completeRequest(input: {
       },
     });
 
+    await tx.plan.update({
+      where: {
+        id: plan.id,
+      },
+      data: {
+        status: "completed",
+      },
+    });
+
     return tx.request.update({
       where: { id: input.requestId },
       data: {
         status: "completed",
         coinTransferred: true,
-        completedAt: Date.now(),
+        // completedAt: Date.now(),
       },
     });
   });

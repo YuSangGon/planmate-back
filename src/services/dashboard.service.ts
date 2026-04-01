@@ -19,9 +19,6 @@ export async function getDashboardOverviewService(userId: string) {
     prisma.request.count({
       where: {
         OR: [{ travellerId: userId }, { plannerId: userId }],
-        status: {
-          in: ["matched", "in_progress", "submitted"],
-        },
       },
     }),
     prisma.matchProposal.count({
@@ -77,9 +74,6 @@ export async function getDashboardRequestsService(userId: string) {
   const items = await prisma.request.findMany({
     where: {
       OR: [{ travellerId: userId }, { plannerId: userId }],
-      status: {
-        in: ["matched", "in_progress", "submitted"],
-      },
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     select: {
@@ -159,9 +153,18 @@ export async function getDashboardRequestsService(userId: string) {
 export async function getDashboardProposalsService(userId: string) {
   const items = await prisma.matchProposal.findMany({
     where: {
-      request: {
-        travellerId: userId,
-      },
+      OR: [
+        {
+          request: {
+            travellerId: userId,
+          },
+        },
+        {
+          request: {
+            plannerId: userId,
+          },
+        },
+      ],
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     select: {
@@ -178,6 +181,11 @@ export async function getDashboardProposalsService(userId: string) {
           duration: true,
           budget: true,
           status: true,
+          traveller: {
+            select: {
+              id: true,
+            },
+          },
         },
       },
       planner: {
@@ -224,6 +232,7 @@ export async function getDashboardPlansService(userId: string) {
   const items = await prisma.plan.findMany({
     where: {
       plannerId: userId,
+      planType: "personal",
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
     select: {
@@ -237,6 +246,7 @@ export async function getDashboardPlansService(userId: string) {
       summary: true,
       tags: true,
       createdAt: true,
+      planType: true,
       request: {
         select: {
           id: true,

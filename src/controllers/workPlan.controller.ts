@@ -12,6 +12,8 @@ import {
   completeWorkPlanService,
   getPreviewPlan,
   getPlan,
+  getPreviewRequestPlan,
+  getRequestPlan,
 } from "../services/workPlan.service";
 
 export async function getPlannerWorkPlan(req: Request, res: Response) {
@@ -237,12 +239,53 @@ export async function getPreviewPlanController(req: Request, res: Response) {
   }
 }
 
+export async function getPreviewRequestPlanController(
+  req: Request,
+  res: Response,
+) {
+  const requestId = req.params.requestId as string;
+  const userId = req.auth?.sub as string;
+
+  try {
+    const data = await getPreviewRequestPlan(requestId, userId);
+
+    res.json({ success: true, data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load preview plan";
+
+    res.status(message === "Forbidden" ? 403 : 400).json({
+      success: false,
+      message,
+    });
+  }
+}
+
 export async function getPlanController(req: Request, res: Response) {
   const planId = req.params.planId as string;
   const userId = req.auth?.sub as string;
 
   try {
     const data = await getPlan(planId, userId);
+
+    res.json({ success: true, data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load preview plan";
+
+    res.status(message === "Forbidden" ? 403 : 400).json({
+      success: false,
+      message,
+    });
+  }
+}
+
+export async function getRequestPlanController(req: Request, res: Response) {
+  const requestId = req.params.requestId as string;
+  const userId = req.auth?.sub as string;
+
+  try {
+    const data = await getRequestPlan(requestId, userId);
 
     res.json({ success: true, data });
   } catch (error) {
