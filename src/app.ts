@@ -48,9 +48,9 @@ app.use("/api", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const port = Number(process.env.PORT || 10000);
+const port = Number(process.env.PORT || 4000);
 
-const server = app.listen(port, "0.0.0.0", () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
