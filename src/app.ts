@@ -33,6 +33,10 @@ app.options("*", cors());
 
 app.use(express.json());
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.get("/", (_req, res) => {
   res.json({
     success: true,
@@ -47,8 +51,8 @@ app.use("/api", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const server = app.listen(env.port, () => {
-  console.log(`Server is running on port ${env.port}`);
+const server = app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
 
 initSocketServer(server);
