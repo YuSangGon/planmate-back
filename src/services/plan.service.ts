@@ -100,9 +100,9 @@ export async function getPlansForPlanner(plannerId: string) {
   });
 }
 
-export async function getPlanById(planId: string) {
+export async function getPlanById(planId: string, plannerId: string) {
   return prisma.plan.findUnique({
-    where: { id: planId },
+    where: { id: planId, plannerId: plannerId },
     include: {
       planner: {
         select: {

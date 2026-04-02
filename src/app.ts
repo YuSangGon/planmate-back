@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import routes from "./routes";
-import { env } from "./config/env";
 import { notFoundHandler } from "./middlewares/notFound.middleware";
 import { errorHandler } from "./middlewares/error.middleware";
 import { prisma } from "./lib/prisma";
@@ -14,12 +13,12 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   origin,
-];
+].filter(Boolean) as string[];
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
         callback(null, true);
       } else {
         callback(new Error("CORS blocked"));
@@ -49,8 +48,10 @@ app.use("/api", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const server = app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
+const port = Number(process.env.PORT || 10000);
+
+const server = app.listen(port, "0.0.0.0", () => {
+  console.log(`Server is running on port ${port}`);
 });
 
 initSocketServer(server);

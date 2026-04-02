@@ -22,7 +22,6 @@ export async function getPlans(_req: Request, res: Response) {
 }
 
 export async function getPlansTop3(_req: Request, res: Response) {
-  console.log("???");
   const data = await getPublicPlansTop3();
 
   res.json({
@@ -129,11 +128,11 @@ export async function updatePlannerPlan(req: Request, res: Response) {
     return;
   }
 
-  const plan = await getPlanById(req.params.planId as string);
-  if (plannerId !== plan.planner.id) {
-    res.status(401).json({
+  const plan = await getPlanById(req.params.planId as string, plannerId);
+  if (!plan) {
+    res.status(403).json({
       success: false,
-      message: "Unauthorized",
+      message: "Plan not found",
     });
     return;
   }
@@ -171,11 +170,11 @@ export async function deletePlannerPlan(req: Request, res: Response) {
     return;
   }
 
-  const plan = await getPlanById(req.params.planId as string);
-  if (plannerId !== plan.planner.id) {
-    res.status(401).json({
+  const plan = await getPlanById(req.params.planId as string, plannerId);
+  if (!plan) {
+    res.status(403).json({
       success: false,
-      message: "Unauthorized",
+      message: "Plan not found",
     });
     return;
   }
