@@ -1,4 +1,4 @@
-# PlanMate Frontend 🚀
+# PlanMate Backend 🚀
 
 ![PlanMate Screenshot](./planMate.png)
 
