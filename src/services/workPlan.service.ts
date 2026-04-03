@@ -196,7 +196,7 @@ export type PlanInfo = {
   title: string;
   destination: string;
   summary: string;
-  price: string;
+  price: number;
   duration: string;
   visibility: "public" | "private";
   tags: string[];
@@ -222,7 +222,7 @@ export async function createWorkPlan(input: {
       title: input.data.title,
       destination: input.data.destination,
       summary: input.data.summary,
-      price: input.data.price,
+      price: Number(input.data.price),
       duration: input.data.duration,
       visibility: input.data.visibility,
       tags: input.data.tags,
@@ -328,7 +328,7 @@ export async function editWorkPlanService(input: EditWorkPlanInput) {
       title: input.planInfo.title,
       destination: input.planInfo.destination,
       summary: input.planInfo.summary,
-      price: input.planInfo.price,
+      price: Number(input.planInfo.price),
       duration: input.planInfo.duration,
       visibility: input.planInfo.visibility,
       tags: input.planInfo.tags,

@@ -142,7 +142,7 @@ export async function completeRequest(input: {
 
   const plan = await prisma.plan.findFirst({
     where: {
-      requestId: requestItem.requestId,
+      requestId: requestItem.id,
       travellerId: requestItem.travellerId,
       status: "submitted",
     },
@@ -184,7 +184,7 @@ export async function completeRequest(input: {
       data: {
         status: "completed",
         coinTransferred: true,
-        // completedAt: Date.now(),
+        completedAt: new Date(),
       },
     });
   });

@@ -1,4 +1,3 @@
-import { includes } from "zod";
 import { prisma } from "../lib/prisma";
 
 type CreatePlanInput = {
@@ -101,7 +100,7 @@ export async function getPlansForPlanner(plannerId: string) {
 }
 
 export async function getPlanById(planId: string, plannerId: string) {
-  return prisma.plan.findUnique({
+  return prisma.plan.findFirst({
     where: { id: planId, plannerId: plannerId },
     include: {
       planner: {
@@ -109,7 +108,6 @@ export async function getPlanById(planId: string, plannerId: string) {
           id: true,
           name: true,
           bio: true,
-          specialty: true,
         },
       },
       request: {

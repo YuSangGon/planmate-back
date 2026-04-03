@@ -1,5 +1,4 @@
 import { prisma } from "../lib/prisma";
-import { getPlannerReviewSummaryService } from "./review.service";
 
 export async function getPlanners() {
   const planners = await prisma.user.findMany({
@@ -238,41 +237,5 @@ export async function getPlannerById(plannerId: string) {
           }
         : undefined,
     })),
-  };
-}
-
-export async function getPlannerDetailService(plannerId: string) {
-  const planner = await prisma.user.findFirst({
-    where: {
-      id: plannerId,
-    },
-    include: {
-      plannerReceivedReviews: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          traveller: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      plannerPlans: {
-        where: { visibility: "public" },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
-
-  if (!planner) {
-    throw new Error("Planner not found");
-  }
-
-  const reviewSummary = await getPlannerReviewSummaryService(plannerId);
-
-  return {
-    ...planner,
-    reviewSummary,
   };
 }
